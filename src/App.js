@@ -6,6 +6,16 @@ import Pusher from 'pusher-js';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import ReactDOM from 'react-dom';
+import './index.css';
+import Amplify from 'aws-amplify';
+import awsconfig from './aws-exports';
+
+import { withAuthenticator, AmplifySignOut } from "@aws-amplify/ui-react";
+
+Amplify.configure(awsconfig);
+
+
 const mapStyles = {
     width: '100%',
     height: '100%'
@@ -132,6 +142,7 @@ class App extends Component {
 
         return (
             <div >
+                <AmplifySignOut />
                 <GoogleMap
                     style={mapStyles}
                     bootstrapURLKeys={{ key: 'AIzaSyBhDHMcNUVKGWe3_JSEeNo9VIZNt6Od6wQ' }}
@@ -145,4 +156,4 @@ class App extends Component {
     }
 }
 
-export default App;
+export default withAuthenticator(App, true);

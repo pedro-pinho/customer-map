@@ -1,6 +1,4 @@
 {
-    "identityPoolName": "customermapa7bf6305_identitypool_a7bf6305",
-    "allowUnauthenticatedIdentities": false,
     "resourceNameTruncated": "customa7bf6305",
     "userPoolName": "customermapa7bf6305_userpool_a7bf6305",
     "autoVerifiedAttributes": [
@@ -32,7 +30,7 @@
     "userpoolClientSetAttributes": false,
     "sharedId": "a7bf6305",
     "resourceName": "customermapa7bf6305",
-    "authSelections": "identityPoolAndUserPool",
+    "authSelections": "userPoolOnly",
     "authRoleArn": {
         "Fn::GetAtt": [
             "AuthRole",
@@ -45,12 +43,61 @@
             "Arn"
         ]
     },
-    "useDefault": "default",
+    "useDefault": "manual",
     "usernameAttributes": [
         "email"
     ],
-    "userPoolGroupList": [],
+    "userPoolGroupList": [
+        "Owner",
+        "Customer"
+    ],
     "serviceName": "Cognito",
     "usernameCaseSensitive": false,
-    "dependsOn": []
+    "dependsOn": [
+        {
+            "category": "function",
+            "resourceName": "customermapa7bf6305CreateAuthChallenge",
+            "triggerProvider": "Cognito",
+            "attributes": [
+                "Arn",
+                "Name"
+            ]
+        },
+        {
+            "category": "function",
+            "resourceName": "customermapa7bf6305CustomMessage",
+            "triggerProvider": "Cognito",
+            "attributes": [
+                "Arn",
+                "Name"
+            ]
+        },
+        {
+            "category": "function",
+            "resourceName": "customermapa7bf6305DefineAuthChallenge",
+            "triggerProvider": "Cognito",
+            "attributes": [
+                "Arn",
+                "Name"
+            ]
+        },
+        {
+            "category": "function",
+            "resourceName": "customermapa7bf6305VerifyAuthChallengeResponse",
+            "triggerProvider": "Cognito",
+            "attributes": [
+                "Arn",
+                "Name"
+            ]
+        }
+    ],
+    "userPoolGroups": true,
+    "adminQueries": false,
+    "triggers": "{\n  \"CreateAuthChallenge\": [\n    \"captcha-create-challenge\"\n  ],\n  \"CustomMessage\": [\n    \"verification-link\"\n  ],\n  \"DefineAuthChallenge\": [\n    \"captcha-define-challenge\"\n  ],\n  \"VerifyAuthChallengeResponse\": [\n    \"captcha-verify\"\n  ]\n}",
+    "hostedUI": false,
+    "verificationBucketName": "customermapa7bf6305verificationbucket",
+    "parentStack": {
+        "Ref": "AWS::StackId"
+    },
+    "permissions": []
 }

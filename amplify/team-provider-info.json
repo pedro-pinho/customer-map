@@ -13,7 +13,20 @@
     },
     "categories": {
       "auth": {
-        "customermapa7bf6305": {}
+        "customermapa7bf6305": {},
+        "userPoolGroups": {}
+      },
+      "function": {
+        "customermapa7bf6305CreateAuthChallenge": {},
+        "customermapa7bf6305CustomMessage": {
+          "REDIRECTURL": "",
+          "EMAILSUBJECT": "",
+          "EMAILMESSAGE": ""
+        },
+        "customermapa7bf6305DefineAuthChallenge": {},
+        "customermapa7bf6305VerifyAuthChallengeResponse": {
+          "RECAPTCHASECRET": ""
+        }
       }
     }
   }
