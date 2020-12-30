@@ -12,7 +12,7 @@ The owner register page must to have:
 The customers register page must to have:
 - First Name - required
 - Last Name - required
-- email - required
+- Email - required
 - Address - required
     - Country
     - State

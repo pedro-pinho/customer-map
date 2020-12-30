@@ -55,7 +55,7 @@ class App extends Component {
             });
             this.getLocation();
             this.notify();
-        })
+        });
 
         this.presenceChannel.bind('location-update', body => {
             this.setState((prevState, props) => {
@@ -75,11 +75,11 @@ class App extends Component {
                 return newState;
             })
             this.notify()
-        })
+        });
 
         this.presenceChannel.bind('pusher:member_added', member => {
             this.notify();
-        })
+        });
     }
 
     notify = () => toast(`Users online : ${Object.keys(this.state.users_online).length}`, {
