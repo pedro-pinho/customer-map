@@ -9,23 +9,6 @@ export const mapContainerStyles = {
     height: '80%'
 }
 
-export const markerStyle = {
-    height: '50px',
-    width: '50px',
-    marginTop: '-50px'
-}
-
-export const imgStyle = {
-    height: '80%'
-}
-
-export const Marker = ({ title }) => (
-    <div style={markerStyle}>
-        <img style={imgStyle} src="https://res.cloudinary.com/og-tech/image/upload/s--OpSJXuvZ--/v1545236805/map-marker_hfipes.png" alt={title} />
-        <h3>{title}</h3>
-    </div>
-);
-
 export const listLocations = `query listLocations {
     listLocations{
         items{

@@ -6,7 +6,9 @@ import Pusher from 'pusher-js';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { API, Auth, graphqlOperation } from "aws-amplify";
-import ListItem from './components/ListItem';
+import ListItem from './components/list/ListItem';
+import Intro from './components/intro/Intro';
+import Marker from './components/marker/Marker';
 import './index.css';
 import * as constants from './constants/constants.js';
 
@@ -142,26 +144,21 @@ class App extends Component {
                 curr.user = this.state.current_user.username;
             }
             return (
-                <constants.Marker
+                <Marker
                     key={id}
                     title={`${curr.user === this.state.current_user.username ? 'My location' : curr.user + "'s location"}`}
                     lat={curr.lat}
                     lng={curr.lng}
                 >
-                </constants.Marker>
+                </Marker>
             );
         });
-
         return (
             <div className="App" >
-                <div className="App-header">
-                    <h1>Cabeçalho</h1>
-                    {/* <AmplifySignOut /> */}
-                </div>
+                <Intro />
                 <div className="App-body">
                     <GoogleMap
                         style={constants.mapStyles}
-                        //containerElement={ <div style={{ height: `800px`, width: '800px' }} /> }
                         bootstrapURLKeys={{ key: constants.bootstrapURLKeys }}
                         center={this.state.center}
                         zoom={14}
