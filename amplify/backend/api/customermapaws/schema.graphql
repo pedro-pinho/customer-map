@@ -1,0 +1,13 @@
+type Location
+  @model
+  @auth(
+    rules: [
+      { allow: groups, groups: ["Customer"], queries: null, mutations: [create, update] }
+      { allow: groups, groups: ["Owner"], queries: [get, list], mutations: null }
+    ]
+  ) {
+  id: ID!
+  user: String!
+  latitude: String!
+  longitude: String!
+}

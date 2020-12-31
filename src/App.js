@@ -5,8 +5,9 @@ import axios from 'axios';
 import Pusher from 'pusher-js';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import { API, graphqlOperation } from "aws-amplify";
 import ReactDOM from 'react-dom';
+import ListItem from './components/ListItem';
 import './index.css';
 import * as constants from './constants/constants.js';
 
@@ -25,7 +26,37 @@ class App extends Component {
         }
     }
 
-    componentDidMount() {
+    // AWS backend methods
+    locationMutation = async () => {
+        //Adding a fake location for testing purposes.
+        const locationDetails = {
+            user: 'pedropinho37@gmail.com',
+            latitude: '-22.334507132639327',
+            longitude: '-49.09722013324578'
+        };
+        console.log(locationDetails);
+        try {
+            const newLocation = await API.graphql(graphqlOperation(constants.addLocation, locationDetails));
+            console.log('awaited, printing result');
+            console.log(JSON.stringify(newLocation));
+        } catch (err) {
+            console.log('error: ', err);
+        }
+    };
+    listQuery = async () => {
+        console.log('listing locations');
+        var allLocations;
+        try {
+            allLocations = await API.graphql(graphqlOperation(constants.listLocations));
+        } catch (err) {
+            allLocations = '';
+            console.log('error: ', err);
+        }
+        console.log(JSON.stringify(allLocations));
+        return allLocations;
+    };
+
+    async componentDidMount() {
         var pusher = new Pusher('538f505398eab7878781', {
             authEndpoint: "http://localhost:3128/pusher/auth",
             cluster: 'us2'
@@ -38,7 +69,7 @@ class App extends Component {
                 current_user: members.myID
             });
             this.getLocation();
-            this.notify();
+            //this.notify();
         });
 
         this.presenceChannel.bind('location-update', body => {
@@ -58,12 +89,21 @@ class App extends Component {
                 delete newState.users_online[`${member.id}`];
                 return newState;
             })
-            this.notify()
+            //this.notify()
         });
 
         this.presenceChannel.bind('pusher:member_added', member => {
-            this.notify();
+            //this.notify();
         });
+
+        try {
+            this.locationMutation();
+            const locations = await this.listQuery();
+            console.log('locations: ', locations);
+            //this.setState({ locations: books.data.listBooks.items });
+        } catch (err) {
+            console.log('error: ', err);
+        }
     }
 
     notify = () => toast(`Users online : ${Object.keys(this.state.users_online).length}`, {
@@ -113,9 +153,8 @@ class App extends Component {
                 </constants.Marker>
             );
         });
-
         return (
-            <div >
+            <div className="App" >
                 <AmplifySignOut />
                 <GoogleMap
                     style={constants.mapStyles}

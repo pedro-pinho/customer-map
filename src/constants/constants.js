@@ -28,17 +28,22 @@ export const listLocations = `query listLocations {
     listLocations{
         items{
             id
+            user
             latitude
             longitude
+            createdAt
+            updatedAt
         }
     }
 }`;
-export const addLocation = `mutation createLocation($latitude:String! $longitude: String!) {
+export const addLocation = `mutation createLocation($user: String! $latitude:String! $longitude: String!) {
     createLocation(input:{
+        user:$user
         latitude:$latitude
         longitude:$longitude
     }){
         id
+        user
         latitude
         longitude
     }
