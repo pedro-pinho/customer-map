@@ -6,7 +6,6 @@ import Pusher from 'pusher-js';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { API, graphqlOperation } from "aws-amplify";
-import ReactDOM from 'react-dom';
 import ListItem from './components/ListItem';
 import './index.css';
 import * as constants from './constants/constants.js';
@@ -27,17 +26,16 @@ class App extends Component {
     }
 
     // AWS backend methods
-    locationMutation = async () => {
-        //Adding a fake location for testing purposes.
+    locationMutation = async (locationDetails) => {
+        /*
+        Param have to look like this
         const locationDetails = {
-            user: 'pedropinho37@gmail.com',
+            user: 'Pedro Pinho',
             latitude: '-22.334507132639327',
             longitude: '-49.09722013324578'
-        };
-        console.log(locationDetails);
+        }; */
         try {
             const newLocation = await API.graphql(graphqlOperation(constants.addLocation, locationDetails));
-            console.log('awaited, printing result');
             console.log(JSON.stringify(newLocation));
         } catch (err) {
             console.log('error: ', err);
@@ -49,10 +47,8 @@ class App extends Component {
         try {
             allLocations = await API.graphql(graphqlOperation(constants.listLocations));
         } catch (err) {
-            allLocations = '';
             console.log('error: ', err);
         }
-        console.log(JSON.stringify(allLocations));
         return allLocations;
     };
 
@@ -95,12 +91,11 @@ class App extends Component {
         this.presenceChannel.bind('pusher:member_added', member => {
             //this.notify();
         });
-
+        console.log('getting list of locations');
         try {
-            this.locationMutation();
             const locations = await this.listQuery();
             console.log('locations: ', locations);
-            //this.setState({ locations: books.data.listBooks.items });
+            this.setState({ locations: locations.data.listLocations.items });
         } catch (err) {
             console.log('error: ', err);
         }
@@ -140,15 +135,15 @@ class App extends Component {
             alert("Sorry, geolocation is not available on your device. You need that to use this app");
         }
     }
-
     render() {
-        let locationMarkers = Object.keys(this.state.locations).map((username, id) => {
+        let locationMarkers = Object.keys(this.state.locations).map((key, id) => {
+            const curr = this.state.locations[key];
             return (
                 <constants.Marker
                     key={id}
-                    title={`${username === this.state.current_user ? 'My location' : username + "'s location"}`}
-                    lat={this.state.locations[`${username}`].lat}
-                    lng={this.state.locations[`${username}`].lng}
+                    title={`${curr.user === this.state.current_user ? 'My location' : curr.user + "'s location"}`}
+                    lat={curr.latitude}
+                    lng={curr.longitude}
                 >
                 </constants.Marker>
             );
