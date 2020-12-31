@@ -2,7 +2,7 @@
     display: flex;
     align-items: center;
     width: 180px;
-    color: var(--main-blue);
+    color: #F29900;
 }
 
 .marker-icon {
@@ -11,5 +11,6 @@
 
 .marker-text {
     font-size: 1.3em;
-    color: blue;
+    font-family: bold;
+    color: #F29900;
 }

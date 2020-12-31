@@ -2,25 +2,13 @@ import React from 'react';
 
 const ListItem = ({ onChange, onDelete, name, address, date }) => {
     return (
-        <div className="Item-container">
-            <input
-                className="Item-field"
-                value={name}
-                onChange={onChange}
-            />
-            <input
-                className="Item-field"
-                value={address}
-                onChange={onChange}
-            />
-            <input
-                className="Item-field"
-                value={date}
-                onChange={onChange}
-            />
+        <li className="Item-container">
+            <div>{name}</div>
+            <div>{address}</div>
+            <div>{date}</div>
             <button onClick={onDelete}>Editar</button>
             <button onClick={onDelete}>Excluir</button>
-        </div>
+        </li>
     );
 };
 

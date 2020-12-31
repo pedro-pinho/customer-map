@@ -1,6 +1,14 @@
 [
-  {
-    "groupName": "userPoolGroup",
-    "precedence": 1
-  }
+    {
+        "groupName": "userPoolGroup",
+        "precedence": 1
+    },
+    {
+        "groupName": "owner",
+        "precedence": 2
+    },
+    {
+        "groupName": "customer",
+        "precedence": 3
+    }
 ]
