@@ -3,9 +3,9 @@ import GoogleMap from 'google-map-react';
 
 import axios from 'axios';
 import Pusher from 'pusher-js';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { API, graphqlOperation } from "aws-amplify";
+import { API, Auth, graphqlOperation } from "aws-amplify";
 import ListItem from './components/ListItem';
 import './index.css';
 import * as constants from './constants/constants.js';
@@ -21,18 +21,18 @@ class App extends Component {
             center: { lat: -22.330741676472787, lng: -49.07009477316554 },
             locations: {},
             users_online: [],
-            current_user: ''
+            current_user_id: '',
+            current_user: {}
         }
     }
 
     // AWS backend methods
     locationMutation = async (locationDetails) => {
-        /*
-        Param have to look like this
-        const locationDetails = {
-            user: 'Pedro Pinho',
-            latitude: '-22.334507132639327',
-            longitude: '-49.09722013324578'
+        
+        /* const locationDetails = {
+            user: 'yuri',
+            lat: '-22.326088810418575',
+            lng: '-49.08957188032611'
         }; */
         try {
             const newLocation = await API.graphql(graphqlOperation(constants.addLocation, locationDetails));
@@ -62,7 +62,7 @@ class App extends Component {
         this.presenceChannel.bind('pusher:subscription_succeeded', members => {
             this.setState({
                 users_online: members.members,
-                current_user: members.myID
+                current_user_id: members.myID
             });
             this.getLocation();
             //this.notify();
@@ -91,11 +91,11 @@ class App extends Component {
         this.presenceChannel.bind('pusher:member_added', member => {
             //this.notify();
         });
-        console.log('getting list of locations');
         try {
             const locations = await this.listQuery();
-            console.log('locations: ', locations);
             this.setState({ locations: locations.data.listLocations.items });
+            const cred = await Auth.currentAuthenticatedUser();
+            this.setState({ current_user: cred });
         } catch (err) {
             console.log('error: ', err);
         }
@@ -115,15 +115,15 @@ class App extends Component {
         if ("geolocation" in navigator) {
             navigator.geolocation.watchPosition(position => {
                 //Keep watching user's position as he moves
-                let location = { lat: position.coords.latitude, lng: position.coords.longitude };
+                let location = {lat: position.coords.latitude, lng: position.coords.longitude, user: this.state.current_user.username };
                 this.setState((prevState, props) => {
                     let newState = { ...prevState };
                     newState.center = location;
-                    newState.locations[`${prevState.current_user}`] = location;
+                    newState.locations[`${prevState.current_user_id}`] = location;
                     return newState;
                 });
                 axios.post("http://localhost:3128/update-location", {
-                    username: this.state.current_user,
+                    username: this.state.current_user_id,
                     location: location
                 }).then(res => {
                     if (res.status === 200) {
@@ -138,27 +138,37 @@ class App extends Component {
     render() {
         let locationMarkers = Object.keys(this.state.locations).map((key, id) => {
             const curr = this.state.locations[key];
+            if (typeof curr.user === "undefined") {
+                curr.user = this.state.current_user.username;
+            }
             return (
                 <constants.Marker
                     key={id}
-                    title={`${curr.user === this.state.current_user ? 'My location' : curr.user + "'s location"}`}
-                    lat={curr.latitude}
-                    lng={curr.longitude}
+                    title={`${curr.user === this.state.current_user.username ? 'My location' : curr.user + "'s location"}`}
+                    lat={curr.lat}
+                    lng={curr.lng}
                 >
                 </constants.Marker>
             );
         });
+
         return (
             <div className="App" >
-                <AmplifySignOut />
-                <GoogleMap
-                    style={constants.mapStyles}
-                    bootstrapURLKeys={{ key: 'AIzaSyBhDHMcNUVKGWe3_JSEeNo9VIZNt6Od6wQ' }}
-                    center={this.state.center}
-                    zoom={14}
-                >
-                    {locationMarkers}
-                </GoogleMap>
+                <div className="App-header">
+                    <h1>Cabeçalho</h1>
+                    {/* <AmplifySignOut /> */}
+                </div>
+                <div className="App-body">
+                    <GoogleMap
+                        style={constants.mapStyles}
+                        //containerElement={ <div style={{ height: `800px`, width: '800px' }} /> }
+                        bootstrapURLKeys={{ key: constants.bootstrapURLKeys }}
+                        center={this.state.center}
+                        zoom={14}
+                    >
+                        {locationMarkers}
+                    </GoogleMap>
+                </div>
             </div>
         )
     }

@@ -6,8 +6,8 @@ export const getLocation = /* GraphQL */ `
     getLocation(id: $id) {
       id
       user
-      latitude
-      longitude
+      lat
+      lng
       createdAt
       updatedAt
     }
@@ -23,8 +23,8 @@ export const listLocations = /* GraphQL */ `
       items {
         id
         user
-        latitude
-        longitude
+        lat
+        lng
         createdAt
         updatedAt
       }

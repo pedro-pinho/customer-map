@@ -1,6 +1,12 @@
+export const bootstrapURLKeys = 'AIzaSyBhDHMcNUVKGWe3_JSEeNo9VIZNt6Od6wQ';
+
 export const mapStyles = {
     width: '100%',
     height: '100%'
+}
+
+export const mapContainerStyles = {
+    height: '80%'
 }
 
 export const markerStyle = {
@@ -10,7 +16,7 @@ export const markerStyle = {
 }
 
 export const imgStyle = {
-    height: '100%'
+    height: '80%'
 }
 
 export const Marker = ({ title }) => (
@@ -20,31 +26,27 @@ export const Marker = ({ title }) => (
     </div>
 );
 
-export const initialFormState = {
-    username: '', password: '', email: '', authCode: '', formType: 'signUp'
-} 
-
 export const listLocations = `query listLocations {
     listLocations{
         items{
             id
             user
-            latitude
-            longitude
+            lat
+            lng
             createdAt
             updatedAt
         }
     }
 }`;
-export const addLocation = `mutation createLocation($user: String! $latitude:String! $longitude: String!) {
+export const addLocation = `mutation createLocation($user: String! $lat:String! $lng: String!) {
     createLocation(input:{
         user:$user
-        latitude:$latitude
-        longitude:$longitude
+        lat:$lat
+        lng:$lng
     }){
         id
         user
-        latitude
-        longitude
+        lat
+        lng
     }
 }`;

@@ -9,8 +9,8 @@ export const createLocation = /* GraphQL */ `
     createLocation(input: $input, condition: $condition) {
       id
       user
-      latitude
-      longitude
+      lat
+      lng
       createdAt
       updatedAt
     }
@@ -24,8 +24,8 @@ export const updateLocation = /* GraphQL */ `
     updateLocation(input: $input, condition: $condition) {
       id
       user
-      latitude
-      longitude
+      lat
+      lng
       createdAt
       updatedAt
     }
@@ -39,8 +39,8 @@ export const deleteLocation = /* GraphQL */ `
     deleteLocation(input: $input, condition: $condition) {
       id
       user
-      latitude
-      longitude
+      lat
+      lng
       createdAt
       updatedAt
     }

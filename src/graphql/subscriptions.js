@@ -6,8 +6,8 @@ export const onCreateLocation = /* GraphQL */ `
     onCreateLocation {
       id
       user
-      latitude
-      longitude
+      lat
+      lng
       createdAt
       updatedAt
     }
@@ -18,8 +18,8 @@ export const onUpdateLocation = /* GraphQL */ `
     onUpdateLocation {
       id
       user
-      latitude
-      longitude
+      lat
+      lng
       createdAt
       updatedAt
     }
@@ -30,8 +30,8 @@ export const onDeleteLocation = /* GraphQL */ `
     onDeleteLocation {
       id
       user
-      latitude
-      longitude
+      lat
+      lng
       createdAt
       updatedAt
     }

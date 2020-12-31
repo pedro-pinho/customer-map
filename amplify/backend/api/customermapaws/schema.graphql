@@ -1,6 +1,6 @@
 type Location @model {
   id: ID!
   user: String!
-  latitude: String!
-  longitude: String!
+  lat: String!
+  lng: String!
 }
