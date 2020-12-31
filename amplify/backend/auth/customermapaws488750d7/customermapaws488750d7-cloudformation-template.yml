@@ -9,50 +9,16 @@ Parameters:
     Type: String
 
   
-  
-  
-  functioncustomermapa7bf6305CreateAuthChallengeArn:
-    Type: String
-    Default: functioncustomermapa7bf6305CreateAuthChallengeArn
-  
-  functioncustomermapa7bf6305CreateAuthChallengeName:
-    Type: String
-    Default: functioncustomermapa7bf6305CreateAuthChallengeName
-  
-  
-  
-  functioncustomermapa7bf6305CustomMessageArn:
-    Type: String
-    Default: functioncustomermapa7bf6305CustomMessageArn
-  
-  functioncustomermapa7bf6305CustomMessageName:
-    Type: String
-    Default: functioncustomermapa7bf6305CustomMessageName
-  
-  
-  
-  functioncustomermapa7bf6305DefineAuthChallengeArn:
-    Type: String
-    Default: functioncustomermapa7bf6305DefineAuthChallengeArn
-  
-  functioncustomermapa7bf6305DefineAuthChallengeName:
-    Type: String
-    Default: functioncustomermapa7bf6305DefineAuthChallengeName
-  
-  
-  
-  functioncustomermapa7bf6305VerifyAuthChallengeResponseArn:
-    Type: String
-    Default: functioncustomermapa7bf6305VerifyAuthChallengeResponseArn
-  
-  functioncustomermapa7bf6305VerifyAuthChallengeResponseName:
-    Type: String
-    Default: functioncustomermapa7bf6305VerifyAuthChallengeResponseName
-  
-  
-  
 
     
+  identityPoolName:
+    Type: String
+  
+            
+  
+  allowUnauthenticatedIdentities:
+    Type: String
+            
   resourceNameTruncated:
     Type: String
   
@@ -148,13 +114,10 @@ Parameters:
   
             
         
-  usernameAttributes:
-    Type: CommaDelimitedList
-      
-        
   userPoolGroupList:
     Type: CommaDelimitedList
       
+            
   serviceName:
     Type: String
   
@@ -167,60 +130,10 @@ Parameters:
   dependsOn:
     Type: CommaDelimitedList
       
-  
-  userPoolGroups:
-    Type: String
-            
-  
-  adminQueries:
-    Type: String
-            
-  triggers:
-    Type: String
-  
-            
-  
-  hostedUI:
-    Type: String
-            
-            
-  verificationBucketName:
-    Type: String
-  
-            
-      
-  parentStack:
-    Type: String
-        
-        
-  permissions:
-    Type: CommaDelimitedList
-      
 Conditions:
   ShouldNotCreateEnvResources: !Equals [ !Ref env, NONE ]
 
 Resources:
-  
-  CustomMessageConfirmationBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: "Retain"
-    Properties:
-      BucketName:  !If [ShouldNotCreateEnvResources, !Ref verificationBucketName, !Join ['',[!Ref verificationBucketName, '-', !Ref env]]]
-      AccessControl: "Private"
-      WebsiteConfiguration:
-        IndexDocument: "index.html"
-        ErrorDocument: "index.html"
-      CorsConfiguration:
-        CorsRules:
-          -
-            AllowedHeaders:
-              - "Authorization"
-              - "Content-Length"
-            AllowedMethods:
-              - "GET"
-            AllowedOrigins:
-              - "*"
-            MaxAge: 3000
   
   
   # BEGIN SNS ROLE RESOURCE
@@ -228,7 +141,7 @@ Resources:
   # Created to allow the UserPool SMS Config to publish via the Simple Notification Service during MFA Process
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !If [ShouldNotCreateEnvResources, 'customa7bf6305_sns-role', !Join ['',[ 'sns', 'a7bf6305', !Select [3, !Split ['-', !Ref 'AWS::StackName']], '-', !Ref env]]]
+      RoleName: !If [ShouldNotCreateEnvResources, 'custom488750d7_sns-role', !Join ['',[ 'sns', '488750d7', !Select [3, !Split ['-', !Ref 'AWS::StackName']], '-', !Ref env]]]
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -240,10 +153,10 @@ Resources:
               - "sts:AssumeRole"
             Condition:
               StringEquals:
-                sts:ExternalId: customa7bf6305_role_external_id
+                sts:ExternalId: custom488750d7_role_external_id
       Policies:
         -
-          PolicyName: customa7bf6305-sns-policy
+          PolicyName: custom488750d7-sns-policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -274,25 +187,6 @@ Resources:
         
       
       
-      LambdaConfig:
-        
-          CreateAuthChallenge: !Ref functioncustomermapa7bf6305CreateAuthChallengeArn
-        
-        
-          CustomMessage: !Ref functioncustomermapa7bf6305CustomMessageArn
-        
-        
-          DefineAuthChallenge: !Ref functioncustomermapa7bf6305DefineAuthChallengeArn
-        
-        
-        
-        
-        
-        
-        
-          VerifyAuthChallengeResponse: !Ref functioncustomermapa7bf6305VerifyAuthChallengeResponseArn
-        
-      
       
       AutoVerifiedAttributes: !Ref autoVerifiedAttributes
       
@@ -308,69 +202,19 @@ Resources:
           RequireSymbols: false
           RequireUppercase: false
       
-      UsernameAttributes: !Ref usernameAttributes
-      
       MfaConfiguration: !Ref mfaConfiguration
       SmsVerificationMessage: !Ref smsVerificationMessage
       SmsConfiguration:
         SnsCallerArn: !GetAtt SNSRole.Arn
-        ExternalId: customa7bf6305_role_external_id
+        ExternalId: custom488750d7_role_external_id
     
-  
-  
-  UserPoolCreateAuthChallengeLambdaInvokePermission:
-    Type: "AWS::Lambda::Permission"
-    DependsOn: UserPool
-    Properties:
-      Action: "lambda:invokeFunction"
-      Principal: "cognito-idp.amazonaws.com"
-      FunctionName: !Ref functioncustomermapa7bf6305CreateAuthChallengeName
-      SourceArn: !GetAtt UserPool.Arn
-  
-  
-  UserPoolCustomMessageLambdaInvokePermission:
-    Type: "AWS::Lambda::Permission"
-    DependsOn: UserPool
-    Properties:
-      Action: "lambda:invokeFunction"
-      Principal: "cognito-idp.amazonaws.com"
-      FunctionName: !Ref functioncustomermapa7bf6305CustomMessageName
-      SourceArn: !GetAtt UserPool.Arn
-  
-  
-  UserPoolDefineAuthChallengeLambdaInvokePermission:
-    Type: "AWS::Lambda::Permission"
-    DependsOn: UserPool
-    Properties:
-      Action: "lambda:invokeFunction"
-      Principal: "cognito-idp.amazonaws.com"
-      FunctionName: !Ref functioncustomermapa7bf6305DefineAuthChallengeName
-      SourceArn: !GetAtt UserPool.Arn
-  
-  
-  
-  
-  
-  
-  
-  UserPoolVerifyAuthChallengeResponseLambdaInvokePermission:
-    Type: "AWS::Lambda::Permission"
-    DependsOn: UserPool
-    Properties:
-      Action: "lambda:invokeFunction"
-      Principal: "cognito-idp.amazonaws.com"
-      FunctionName: !Ref functioncustomermapa7bf6305VerifyAuthChallengeResponseName
-      SourceArn: !GetAtt UserPool.Arn
-  
-  # Updating lambda role with permissions to Cognito
-  
   
   UserPoolClientWeb:
   # Created provide application access to user pool
   # Depends on UserPool for ID reference
     Type: "AWS::Cognito::UserPoolClient"
     Properties:
-      ClientName: customa7bf6305_app_clientWeb
+      ClientName: custom488750d7_app_clientWeb
       
       RefreshTokenValidity: !Ref userpoolClientRefreshTokenValidity
       UserPoolId: !Ref UserPool
@@ -380,7 +224,7 @@ Resources:
   # Depends on UserPool for ID reference
     Type: "AWS::Cognito::UserPoolClient"
     Properties:
-      ClientName: customa7bf6305_app_client
+      ClientName: custom488750d7_app_client
       
       GenerateSecret: !Ref userpoolClientGenerateSecret
       RefreshTokenValidity: !Ref userpoolClientRefreshTokenValidity
@@ -391,7 +235,7 @@ Resources:
   # Created to execute Lambda which gets userpool app client config values
     Type: 'AWS::IAM::Role'
     Properties:
-      RoleName: !If [ShouldNotCreateEnvResources, !Ref userpoolClientLambdaRole, !Join ['',['upClientLambdaRole', 'a7bf6305', !Select [3, !Split ['-', !Ref 'AWS::StackName']], '-', !Ref env]]]
+      RoleName: !If [ShouldNotCreateEnvResources, !Ref userpoolClientLambdaRole, !Join ['',['upClientLambdaRole', '488750d7', !Select [3, !Split ['-', !Ref 'AWS::StackName']], '-', !Ref env]]]
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -445,7 +289,7 @@ Resources:
   # Marked as depending on UserPoolClientRole for easier to understand CFN sequencing
     Type: 'AWS::IAM::Policy'
     Properties:
-      PolicyName: customa7bf6305_userpoolclient_lambda_iam_policy
+      PolicyName: custom488750d7_userpoolclient_lambda_iam_policy
       Roles:
         - !Ref UserPoolClientRole
       PolicyDocument:
@@ -462,7 +306,7 @@ Resources:
   # Marked as depending on UserPoolClientLambdaPolicy for easier to understand CFN sequencing
     Type: 'AWS::IAM::Policy'
     Properties:
-      PolicyName: customa7bf6305_userpoolclient_lambda_log_policy
+      PolicyName: custom488750d7_userpoolclient_lambda_log_policy
       Roles:
         - !Ref UserPoolClientRole
       PolicyDocument:
@@ -495,8 +339,50 @@ Resources:
 
   
     
+  # BEGIN IDENTITY POOL RESOURCES
+  
+
+  IdentityPool:
+  # Always created
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName: !If [ShouldNotCreateEnvResources, 'customermapaws488750d7_identitypool_488750d7', !Join ['',['customermapaws488750d7_identitypool_488750d7', '__', !Ref env]]]
+      
+      CognitoIdentityProviders:
+        - ClientId:  !Ref UserPoolClient
+          ProviderName: !Sub
+            - cognito-idp.${region}.amazonaws.com/${client}
+            - { region: !Ref "AWS::Region",  client: !Ref UserPool}
+        - ClientId:  !Ref UserPoolClientWeb
+          ProviderName: !Sub
+            - cognito-idp.${region}.amazonaws.com/${client}
+            - { region: !Ref "AWS::Region",  client: !Ref UserPool}
+            
+      AllowUnauthenticatedIdentities: !Ref allowUnauthenticatedIdentities
+      
+    
+    DependsOn: UserPoolClientInputs
+    
+
+  IdentityPoolRoleMap:
+  # Created to map Auth and Unauth roles to the identity pool
+  # Depends on Identity Pool for ID ref
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref IdentityPool
+      Roles:
+          unauthenticated: !Ref unauthRoleArn
+          authenticated: !Ref authRoleArn
+    DependsOn: IdentityPool
+  
 
 Outputs :
+  
+  IdentityPoolId:
+    Value: !Ref 'IdentityPool'
+    Description:  Id for the identity pool
+  IdentityPoolName:
+    Value: !GetAtt IdentityPool.Name
   
   
   

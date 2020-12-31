@@ -8,36 +8,10 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import ReactDOM from 'react-dom';
 import './index.css';
-import Amplify from 'aws-amplify';
-import awsconfig from './aws-exports';
+import * as constants from './constants/constants.js';
 
 import { withAuthenticator, AmplifySignOut } from "@aws-amplify/ui-react";
 
-Amplify.configure(awsconfig);
-
-
-const mapStyles = {
-    width: '100%',
-    height: '100%'
-}
-
-const markerStyle = {
-    height: '50px',
-    width: '50px',
-    marginTop: '-50px'
-}
-
-const imgStyle = {
-    height: '100%'
-}
-
-
-const Marker = ({ title }) => (
-    <div style={markerStyle}>
-        <img style={imgStyle} src="https://res.cloudinary.com/og-tech/image/upload/s--OpSJXuvZ--/v1545236805/map-marker_hfipes.png" alt={title} />
-        <h3>{title}</h3>
-    </div>
-);
 toast.configure();
 class App extends Component {
     constructor(props) {
@@ -130,13 +104,13 @@ class App extends Component {
     render() {
         let locationMarkers = Object.keys(this.state.locations).map((username, id) => {
             return (
-                <Marker
+                <constants.Marker
                     key={id}
                     title={`${username === this.state.current_user ? 'My location' : username + "'s location"}`}
                     lat={this.state.locations[`${username}`].lat}
                     lng={this.state.locations[`${username}`].lng}
                 >
-                </Marker>
+                </constants.Marker>
             );
         });
 
@@ -144,7 +118,7 @@ class App extends Component {
             <div >
                 <AmplifySignOut />
                 <GoogleMap
-                    style={mapStyles}
+                    style={constants.mapStyles}
                     bootstrapURLKeys={{ key: 'AIzaSyBhDHMcNUVKGWe3_JSEeNo9VIZNt6Od6wQ' }}
                     center={this.state.center}
                     zoom={14}

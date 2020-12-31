@@ -8,9 +8,12 @@
     "@testing-library/react": "^11.2.2",
     "@testing-library/user-event": "^12.6.0",
     "aws-amplify": "^3.3.13",
+    "google-map-react": "^2.1.9",
+    "pusher-js": "^7.0.2",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-scripts": "4.0.1",
+    "react-toastify": "^6.2.0",
     "web-vitals": "^0.2.4"
   },
   "scripts": {
@@ -45,10 +48,6 @@
     "url": "git+https://github.com/pedro-pinho/customer-map.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/pedro-pinho/customer-map/issues"
-  },
-  "homepage": "https://github.com/pedro-pinho/customer-map#readme"
+  "author": "Pedro dos Santos Pinho<pedrosantospinhodev@gmail.com>",
+  "license": "ISC"
 }
