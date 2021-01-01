@@ -8,6 +8,7 @@ export const getLocation = /* GraphQL */ `
       user
       lat
       lng
+      deleted
       createdAt
       updatedAt
     }
@@ -25,6 +26,7 @@ export const listLocations = /* GraphQL */ `
         user
         lat
         lng
+        deleted
         createdAt
         updatedAt
       }

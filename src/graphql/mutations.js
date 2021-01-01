@@ -11,6 +11,7 @@ export const createLocation = /* GraphQL */ `
       user
       lat
       lng
+      deleted
       createdAt
       updatedAt
     }
@@ -26,6 +27,7 @@ export const updateLocation = /* GraphQL */ `
       user
       lat
       lng
+      deleted
       createdAt
       updatedAt
     }
@@ -41,6 +43,7 @@ export const deleteLocation = /* GraphQL */ `
       user
       lat
       lng
+      deleted
       createdAt
       updatedAt
     }

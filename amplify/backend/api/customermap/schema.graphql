@@ -3,4 +3,5 @@ type Location @model {
   user: String!
   lat: String!
   lng: String!
+  deleted(value: Boolean = false): Boolean
 }

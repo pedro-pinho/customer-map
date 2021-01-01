@@ -1,14 +1,5 @@
 export const bootstrapURLKeys = 'AIzaSyBhDHMcNUVKGWe3_JSEeNo9VIZNt6Od6wQ';
 
-export const mapStyles = {
-    width: '100%',
-    height: '100%'
-}
-
-export const mapContainerStyles = {
-    height: '80%'
-}
-
 export const listLocations = `query listLocations {
     listLocations{
         items{
@@ -16,6 +7,7 @@ export const listLocations = `query listLocations {
             user
             lat
             lng
+            deleted
             createdAt
             updatedAt
         }
@@ -31,6 +23,19 @@ export const addLocation = `mutation createLocation($user: String! $lat:String! 
         user
         lat
         lng
+    }
+}`;
+export const updateLocation = `mutation updateLocation($user: String! $lat:String! $lng: String!) {
+    updateLocation(input:{
+        user:$user
+        lat:$lat
+        lng:$lng
+    }, condition: $condition){
+        id
+        user
+        lat
+        lng
+        deleted
     }
 }`;
 

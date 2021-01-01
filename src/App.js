@@ -10,7 +10,7 @@ import ListItem from './components/list/ListItem';
 import Marker from './components/marker/Marker';
 import './index.css';
 import * as constants from './constants/constants.js';
-import { AmplifyAuthenticator, AmplifySignUp, AmplifySignIn } from '@aws-amplify/ui-react';
+import { AmplifyAuthenticator, AmplifySignUp, AmplifySignIn, AmplifySignOut } from '@aws-amplify/ui-react';
 
 toast.configure();
 let nextToken;
@@ -30,7 +30,7 @@ class App extends Component {
     }
 
     // AWS backend methods
-    locationMutation = async (locationDetails) => {
+    addLocation = async (locationDetails) => {
         /* const locationDetails = {
             user: 'yuri',
             lat: '-22.326088810418575',
@@ -40,15 +40,15 @@ class App extends Component {
             const newLocation = await API.graphql(graphqlOperation(constants.addLocation, locationDetails));
             console.log(JSON.stringify(newLocation));
         } catch (err) {
-            console.err('error: ', err);
+            console.error('error: ', err);
         }
     };
-    listQuery = async () => {
+    listLocations = async () => {
         var allLocations;
         try {
             allLocations = await API.graphql(graphqlOperation(constants.listLocations));
         } catch (err) {
-            console.err('error: ', err);
+            console.error('error: ', err);
         }
         return allLocations;
     };
@@ -57,7 +57,7 @@ class App extends Component {
         let path = '/listUsersInGroup';
         let myInit = {
             queryStringParameters: {
-                "groupname": "customermapaws488750d7_userpool_488750d7-dev",
+                "groupname": "customers",
                 "limit": limit,
                 "token": nextToken
             },
@@ -69,17 +69,16 @@ class App extends Component {
         const { NextToken, ...rest } = await API.get(apiName, path, myInit);
         try {
             nextToken = NextToken;
-            console.log('next token is', nextToken);
-            return rest;
+            return rest?.Users;
         } catch (error) {
             console.error('There as an Error', error);
         }
     }
     addToOwnersGroup = async () => {
-        let apiName = 'AdminQueries';
-        let path = '/addUserToGroup';
-        let userName = this.state.current_user.username;
-        let myInit = {
+        const apiName = 'AdminQueries';
+        const path = '/addUserToGroup';
+        const userName = this.state.current_user.username;
+        const myInit = {
             body: {
                 "username" : userName,
                 "groupname": 'owners'
@@ -89,16 +88,22 @@ class App extends Component {
                 Authorization: `${(await Auth.currentSession()).getAccessToken().getJwtToken()}`
             } 
         }
-        return await API.post(apiName, path, myInit);
+        const result = await API.post(apiName, path, myInit);
+        await this.getCredentials();
+        return result;
     }
     getCurrentUserGroups = () => {
         return this.state.current_user.signInUserSession?.accessToken.payload["cognito:groups"];
     };
     isOwner = () => {
-        if (this.state.current_user_groups && typeof this.state.current_user_groups.include === 'function') {
-            return this.state.current_user_groups.include('owner') ? true : false;
-        }
-        return false;
+        const owner = this.state.current_user_groups.filter(elem => elem === 'owners');
+        return owner.length > 0;
+    }
+    getCredentials = async () => {
+        const cred = await Auth.currentAuthenticatedUser();
+        this.setState({ current_user: cred });
+        const groups = this.getCurrentUserGroups();
+        this.setState({ current_user_groups: groups });
     }
 
     async componentDidMount() {
@@ -114,7 +119,7 @@ class App extends Component {
                 current_user_id: members.myID
             });
             this.getLocation();
-            console.log(`Users online : ${Object.keys(this.state.users_online).length}`);
+            //console.log(`Users online : ${Object.keys(this.state.users_online).length}`);
         });
 
         this.presenceChannel.bind('location-update', body => {
@@ -134,25 +139,22 @@ class App extends Component {
                 delete newState.users_online[`${member.id}`];
                 return newState;
             })
-            console.log(`Users online : ${Object.keys(this.state.users_online).length}`);
         });
 
-        this.presenceChannel.bind('pusher:member_added', member => {
+        /* this.presenceChannel.bind('pusher:member_added', member => {
             console.log(`Users online : ${Object.keys(this.state.users_online).length}`);
-        });
+        }); */
+
         try {
-            const locations = await this.listQuery();
+            const locations = await this.listLocations();
             this.setState({ locations: locations.data.listLocations.items });
-            const cred = await Auth.currentAuthenticatedUser();
-            this.setState({ current_user: cred });
-            const groups = this.getCurrentUserGroups();
-            this.setState({ current_user_groups: groups });
+            await this.getCredentials();
             if (this.isOwner()) {
                 const users = await this.listUsers(10);
                 this.setState({ users: users });
             }
         } catch (err) {
-            console.err('error: ', err);
+            console.error('error: ', err);
         }
     }
 
@@ -193,18 +195,25 @@ class App extends Component {
                 </Marker>
             );
         });
-        let users = Object.keys(this.state.users).map((key, id) => {
-            const curr = this.state.users[key];
-            return (
-                <ListItem
-                    key={id}
-                    value={curr}
-                /* onChange={(event) => updateTask(event, index)}
-                onDelete={() => deleteTask(index)} */
-                />
-            );
-        });
-
+        let userList = [];
+        if (this.state.users) {
+            userList = this.state.users.map((elem) => {
+                const name = elem.Attributes.filter(data => data.Name === 'name');
+                const lastName = elem.Attributes.filter(data => data.Name === 'family_name');
+                const address = elem.Attributes.filter(data => data.Name === 'address');
+                console.log(name[0].Value);
+                return (
+                    <ListItem
+                        name={name[0]?.Value + ' ' + lastName[0]?.Value}
+                        address={address[0]?.Value}
+                        date={elem.UserCreateDate}
+                        //onChange={(event) => updateTask(event, index)}
+                        //onDelete={() => deleteTask(index)}
+                    />
+                );
+            });
+        }
+        console.log(userList);
         return (
             <AmplifyAuthenticator>
                 <AmplifySignUp
@@ -213,13 +222,12 @@ class App extends Component {
                     formFields={constants.signUpConfig.signUpFields} 
                 />
                 <AmplifySignIn slot="sign-in" />
-
+                <AmplifySignOut />
                 <div className="App" >
-                    { !this.isOwner() ? <button>I am a Owner!</button> : {users}}
+                    { !this.isOwner() ? <button onClick={this.addToOwnersGroup} >I am an Owner!</button> : userList}
                     <div className="App-body">
-                        <div style={{ width: '100%', height: 400 }}>
+                        <div style={{ width: '100%', height: '800px', 'padding-top': '150px' }}>
                             <GoogleMap
-                                // style={constants.mapStyles}
                                 bootstrapURLKeys={{ key: constants.bootstrapURLKeys }}
                                 center={this.state.center}
                                 zoom={14}
