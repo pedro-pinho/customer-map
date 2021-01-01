@@ -31,11 +31,6 @@ class App extends Component {
 
     // AWS backend methods
     addLocation = async (locationDetails) => {
-        /* const locationDetails = {
-            user: 'yuri',
-            lat: '-22.326088810418575',
-            lng: '-49.08957188032611'
-        }; */
         try {
             const newLocation = await API.graphql(graphqlOperation(constants.addLocation, locationDetails));
             console.log(JSON.stringify(newLocation));
@@ -43,10 +38,18 @@ class App extends Component {
             console.error('error: ', err);
         }
     };
-    listLocations = async () => {
+    updateLocation = async (locationDetails, filter) => {
+        try {
+            const updatedLocation = await API.graphql(graphqlOperation(constants.updateLocation, { locationDetails, filter } ));
+            console.log(JSON.stringify(updatedLocation));
+        } catch (err) {
+            console.error('error: ', err);
+        }
+    }
+    listLocations = async (filter = null) => {
         var allLocations;
         try {
-            allLocations = await API.graphql(graphqlOperation(constants.listLocations));
+            allLocations = await API.graphql(graphqlOperation(constants.listLocations, filter));
         } catch (err) {
             console.error('error: ', err);
         }
@@ -105,6 +108,38 @@ class App extends Component {
         const groups = this.getCurrentUserGroups();
         this.setState({ current_user_groups: groups });
     }
+    //@todo check if can be deleted
+    syncLocation = async () => {
+        // Insert user's location to db
+        var filter = {
+            filter: {
+                user: {
+                    eq: this.state.current_user?.username
+                }
+            }
+        };
+        let old = await this.listLocations(filter);
+
+        const currLoc = this.state.locations[`${this.state.current_user_id}`];
+        const locationDetails = {
+            user: this.state.current_user?.username,
+            lat: currLoc.lat,
+            lng: currLoc.lng
+        };
+
+        if (old.data.listLocations.items.length > 0) {
+            filter = {
+                filter: {
+                    id: {
+                        eq: old.data.listLocations.items[0].id
+                    }
+                }
+            };
+            this.updateLocation(locationDetails, filter);
+        } else {
+            this.addLocation(locationDetails);
+        }
+    }
 
     async componentDidMount() {
         var pusher = new Pusher('538f505398eab7878781', {
@@ -119,13 +154,14 @@ class App extends Component {
                 current_user_id: members.myID
             });
             this.getLocation();
-            //console.log(`Users online : ${Object.keys(this.state.users_online).length}`);
         });
 
         this.presenceChannel.bind('location-update', body => {
             this.setState((prevState, props) => {
                 const newState = { ...prevState }
                 newState.locations[`${body.username}`] = body.location;
+                newState.current_user.lat = body.location.lat;
+                newState.current_user.lng = body.location.lat;
                 return newState;
             });
         });
@@ -141,14 +177,40 @@ class App extends Component {
             })
         });
 
-        /* this.presenceChannel.bind('pusher:member_added', member => {
-            console.log(`Users online : ${Object.keys(this.state.users_online).length}`);
-        }); */
-
         try {
-            const locations = await this.listLocations();
-            this.setState({ locations: locations.data.listLocations.items });
             await this.getCredentials();
+            const locations = await this.listLocations();
+
+            //push db's locations to the state
+            locations.data.listLocations.items.map((elem, index) => {
+                //Current user does not need to be inserted, its already being done
+                if (this.state.current_user.username && elem.user !== this.state.current_user.username) {
+                    this.setState((prevState, props) => {
+                        const newState = { ...prevState }
+                        const usersEntry = newState.locations.filter(data => data.location.user === this.state.current_user.username);
+                        if (usersEntry) {
+                            // Found this user on the array that comes from the node server, update this one
+                            newState.locations[`${usersEntry.username}`] = {
+                                lat: elem.lat,
+                                lng: elem.lat,
+                                user: elem.user
+                            }
+                        } else {
+                            // New user, push it to state so its painted on the screen
+                            let random_string = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+                            newState.locations[`${random_string}`] = {
+                                lat: elem.lat,
+                                lng: elem.lat,
+                                user: elem.user
+                            }
+                        }
+                        return newState;
+                    });
+                }
+                return elem;
+            });
+
+            //Show list
             if (this.isOwner()) {
                 const users = await this.listUsers(10);
                 this.setState({ users: users });
@@ -180,6 +242,29 @@ class App extends Component {
     }
 
     render() {
+        let userList = [];
+        if (this.state.users) {
+            userList = this.state.users.map((elem, i) => {
+                const name = elem.Attributes.filter(data => data.Name === 'name');
+                const lastName = elem.Attributes.filter(data => data.Name === 'family_name');
+                const address = elem.Attributes.filter(data => data.Name === 'address');
+
+                let date = new Date(elem.UserCreateDate);
+                date = new Intl.DateTimeFormat('pt-BR').format(date);
+
+                return (
+                    <ListItem
+                        name={name[0]?.Value + ' ' + lastName[0]?.Value}
+                        address={address[0]?.Value}
+                        date={date}
+                        key={i}
+                        //@todo: add those methods
+                        //onChange={(event) => updateUser(event, index)}
+                        //onDelete={() => deleteUser(index)}
+                    />
+                );
+            });
+        }
         let locationMarkers = Object.keys(this.state.locations).map((key, id) => {
             const curr = this.state.locations[key];
             if (typeof curr.user === "undefined") {
@@ -195,25 +280,6 @@ class App extends Component {
                 </Marker>
             );
         });
-        let userList = [];
-        if (this.state.users) {
-            userList = this.state.users.map((elem) => {
-                const name = elem.Attributes.filter(data => data.Name === 'name');
-                const lastName = elem.Attributes.filter(data => data.Name === 'family_name');
-                const address = elem.Attributes.filter(data => data.Name === 'address');
-                console.log(name[0].Value);
-                return (
-                    <ListItem
-                        name={name[0]?.Value + ' ' + lastName[0]?.Value}
-                        address={address[0]?.Value}
-                        date={elem.UserCreateDate}
-                        //onChange={(event) => updateTask(event, index)}
-                        //onDelete={() => deleteTask(index)}
-                    />
-                );
-            });
-        }
-        console.log(userList);
         return (
             <AmplifyAuthenticator>
                 <AmplifySignUp
@@ -226,7 +292,7 @@ class App extends Component {
                 <div className="App" >
                     { !this.isOwner() ? <button onClick={this.addToOwnersGroup} >I am an Owner!</button> : userList}
                     <div className="App-body">
-                        <div style={{ width: '100%', height: '800px', 'padding-top': '150px' }}>
+                        <div style={{ width: '100%', height: '800px', 'paddingTop': '150px' }}>
                             <GoogleMap
                                 bootstrapURLKeys={{ key: constants.bootstrapURLKeys }}
                                 center={this.state.center}

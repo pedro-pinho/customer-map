@@ -1,6 +1,20 @@
 export const bootstrapURLKeys = 'AIzaSyBhDHMcNUVKGWe3_JSEeNo9VIZNt6Od6wQ';
 
-export const listLocations = `query listLocations {
+export const listLocations = `query listLocations($filter: ModelLocationFilterInput $limit: Int $nextToken: String) {
+    listLocations(filter: $filter, limit: $limit, nextToken: $nextToken) {
+        items{
+            id
+            user
+            lat
+            lng
+            deleted
+            createdAt
+            updatedAt
+        }
+        nextToken
+    }
+}`;
+export const getLocation = `query getLocation(id: $id) {
     listLocations{
         items{
             id
@@ -85,58 +99,7 @@ export const signUpConfig = {
             placeholder: '',
             required: true,
         }
-        ]
-    /* [
-        {
-            label: 'Username (Unique)',
-            key: 'user_name',
-            required: true,
-            displayOrder: 1,
-            type: 'string'
-        },
-        {
-            label: 'First Name',
-            key: 'name',
-            required: true,
-            displayOrder: 2,
-            type: 'string'
-        },
-        {
-            label: 'Last name',
-            key: 'family_name',
-            required: true,
-            displayOrder: 3,
-            type: 'string'
-        },
-        {
-            label: 'Password',
-            key: 'password',
-            required: true,
-            displayOrder: 4,
-            type: 'password'
-        },
-        {
-            label: 'Confirm Password',
-            key: 'password',
-            required: true,
-            displayOrder: 5,
-            type: 'password'
-        },
-        {
-            label: 'Email',
-            key: 'email',
-            required: true,
-            displayOrder: 6,
-            type: 'email'
-        },
-        {
-            label: 'Address (Street, ZipCode, City, State, Country)',
-            key: 'address',
-            required: true,
-            displayOrder: 7,
-            type: 'string'
-        }
-    ] */
+    ]
 };
 
 export const myTheme = {
