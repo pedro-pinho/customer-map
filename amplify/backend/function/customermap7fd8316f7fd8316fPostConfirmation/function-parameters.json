@@ -1,0 +1,17 @@
+{
+  "trigger": true,
+  "modules": [
+    "add-to-group"
+  ],
+  "parentResource": "customermap7fd8316f7fd8316f",
+  "functionName": "customermap7fd8316f7fd8316fPostConfirmation",
+  "resourceName": "customermap7fd8316f7fd8316fPostConfirmation",
+  "parentStack": "auth",
+  "triggerEnvs": [],
+  "triggerDir": "C:\\Users\\pedro\\AppData\\Roaming\\npm\\node_modules\\@aws-amplify\\cli\\node_modules\\amplify-category-auth\\provider-utils\\awscloudformation\\triggers\\PostConfirmation",
+  "triggerTemplate": "PostConfirmation.json.ejs",
+  "roleName": "customermap7fd8316f7fd8316fPostConfirmation",
+  "skipEdit": true,
+  "GROUP": "customers",
+  "enableCors": false
+}

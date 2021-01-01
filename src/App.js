@@ -10,8 +10,7 @@ import ListItem from './components/list/ListItem';
 import Marker from './components/marker/Marker';
 import './index.css';
 import * as constants from './constants/constants.js';
-
-import { withAuthenticator } from "@aws-amplify/ui-react";
+import { AmplifyAuthenticator, AmplifySignUp, AmplifySignIn } from '@aws-amplify/ui-react';
 
 toast.configure();
 let nextToken;
@@ -25,7 +24,8 @@ class App extends Component {
             users_online: [],
             users: [],
             current_user_id: '',
-            current_user: {}
+            current_user: {},
+            current_user_groups: []
         }
     }
 
@@ -75,6 +75,31 @@ class App extends Component {
             console.error('There as an Error', error);
         }
     }
+    addToOwnersGroup = async () => {
+        let apiName = 'AdminQueries';
+        let path = '/addUserToGroup';
+        let userName = this.state.current_user.username;
+        let myInit = {
+            body: {
+                "username" : userName,
+                "groupname": 'owners'
+            }, 
+            headers: {
+                'Content-Type' : 'application/json',
+                Authorization: `${(await Auth.currentSession()).getAccessToken().getJwtToken()}`
+            } 
+        }
+        return await API.post(apiName, path, myInit);
+    }
+    getCurrentUserGroups = () => {
+        return this.state.current_user.signInUserSession?.accessToken.payload["cognito:groups"];
+    };
+    isOwner = () => {
+        if (this.state.current_user_groups && typeof this.state.current_user_groups.include === 'function') {
+            return this.state.current_user_groups.include('owner') ? true : false;
+        }
+        return false;
+    }
 
     async componentDidMount() {
         var pusher = new Pusher('538f505398eab7878781', {
@@ -120,11 +145,14 @@ class App extends Component {
             this.setState({ locations: locations.data.listLocations.items });
             const cred = await Auth.currentAuthenticatedUser();
             this.setState({ current_user: cred });
-            const users = await this.listUsers(10);
-            console.log(users);
-            this.setState({ users: users });
+            const groups = this.getCurrentUserGroups();
+            this.setState({ current_user_groups: groups });
+            if (this.isOwner()) {
+                const users = await this.listUsers(10);
+                this.setState({ users: users });
+            }
         } catch (err) {
-            console.log('error: ', err);
+            console.err('error: ', err);
         }
     }
 
@@ -148,6 +176,7 @@ class App extends Component {
             alert("Sorry, geolocation is not available on your device. You need that to use this app");
         }
     }
+
     render() {
         let locationMarkers = Object.keys(this.state.locations).map((key, id) => {
             const curr = this.state.locations[key];
@@ -177,23 +206,31 @@ class App extends Component {
         });
 
         return (
-            <div className="App" >
-                {users}
-                <div className="App-body">
-                    <div style={{ width: '100%', height: 400 }}>
-                        <GoogleMap
-                            // style={constants.mapStyles}
-                            bootstrapURLKeys={{ key: constants.bootstrapURLKeys }}
-                            center={this.state.center}
-                            zoom={14}
-                        >
-                            {locationMarkers}
-                        </GoogleMap>
+            <AmplifyAuthenticator>
+                <AmplifySignUp
+                    slot="sign-up"
+                    headerText={constants.signUpConfig.header}
+                    formFields={constants.signUpConfig.signUpFields} 
+                />
+                <AmplifySignIn slot="sign-in" />
+
+                <div className="App" >
+                    { !this.isOwner() ? <button>I am a Owner!</button> : {users}}
+                    <div className="App-body">
+                        <div style={{ width: '100%', height: 400 }}>
+                            <GoogleMap
+                                // style={constants.mapStyles}
+                                bootstrapURLKeys={{ key: constants.bootstrapURLKeys }}
+                                center={this.state.center}
+                                zoom={14}
+                            >
+                                {locationMarkers}
+                            </GoogleMap>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </AmplifyAuthenticator>
         )
     }
 }
-
-export default withAuthenticator(App, true);
+export default App;

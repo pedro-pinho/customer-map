@@ -1,10 +1,10 @@
 {
-  "AppSyncApiName": "customermapaws",
+  "AppSyncApiName": "customermap",
   "DynamoDBBillingMode": "PAY_PER_REQUEST",
   "DynamoDBEnableServerSideEncryption": false,
   "AuthCognitoUserPoolId": {
     "Fn::GetAtt": [
-      "authcustomermapaws488750d7",
+      "authcustomermap7fd8316f7fd8316f",
       "Outputs.UserPoolId"
     ]
   }

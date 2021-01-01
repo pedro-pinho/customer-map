@@ -5,9 +5,9 @@
     "env": {
       "Type": "String"
     },
-    "authcustomermapaws488750d7UserPoolId": {
+    "authcustomermap7fd8316f7fd8316fUserPoolId": {
       "Type": "String",
-      "Default": "authcustomermapaws488750d7UserPoolId"
+      "Default": "authcustomermap7fd8316f7fd8316fUserPoolId"
     }
   },
   "Conditions": {
@@ -32,12 +32,12 @@
         "FunctionName": {
           "Fn::If": [
             "ShouldNotCreateEnvResources",
-            "AdminQueriesc4c51be1",
+            "AdminQuerieseee2d758",
             {
               "Fn::Join": [
                 "",
                 [
-                  "AdminQueriesc4c51be1",
+                  "AdminQuerieseee2d758",
                   "-",
                   {
                     "Ref": "env"
@@ -52,9 +52,9 @@
             "ENV": {
               "Ref": "env"
             },
-            "GROUP": "owner",
+            "GROUP": "owners",
             "USERPOOL": {
-              "Ref": "authcustomermapaws488750d7UserPoolId"
+              "Ref": "authcustomermap7fd8316f7fd8316fUserPoolId"
             }
           }
         },
@@ -67,8 +67,8 @@
         "Runtime": "nodejs10.x",
         "Timeout": "25",
         "Code": {
-          "S3Bucket": "amplify-customermapaws-dev-95216-deployment",
-          "S3Key": "amplify-builds/AdminQueriesc4c51be1-634743794b4273496575-build.zip"
+          "S3Bucket": "amplify-customermap-dev-101721-deployment",
+          "S3Key": "amplify-builds/AdminQuerieseee2d758-634743794b4273496575-build.zip"
         }
       }
     },
@@ -78,12 +78,12 @@
         "RoleName": {
           "Fn::If": [
             "ShouldNotCreateEnvResources",
-            "AdminQueriesc4c51be1LambdaRole",
+            "AdminQuerieseee2d758LambdaRole",
             {
               "Fn::Join": [
                 "",
                 [
-                  "AdminQueriesc4c51be1LambdaRole",
+                  "AdminQuerieseee2d758LambdaRole",
                   "-",
                   {
                     "Ref": "env"
@@ -179,7 +179,7 @@
                     },
                     ":userpool/",
                     {
-                      "Ref": "authcustomermapaws488750d7UserPoolId"
+                      "Ref": "authcustomermap7fd8316f7fd8316fUserPoolId"
                     }
                   ]
                 ]
