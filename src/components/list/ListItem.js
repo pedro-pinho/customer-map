@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 
-function ListItem({ onChange, onDelete, userName, name, address, date, isOwner }) {
+function ListItem({ onChange, onDelete, onUndo, userName, name, address, date, isOwner, enabled }) {
     const [editName, setEditName] = useState(0);
     const [editAddress, setEditAddress] = useState(0);
 
     const [inputName, setInputName] = useState(name);
     const [inputAddress, setInputAddress] = useState(address);
+
+    const [inputEnabled, setInputEnabled] = useState(enabled);
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
@@ -33,20 +35,38 @@ function ListItem({ onChange, onDelete, userName, name, address, date, isOwner }
         }
     }
 
-    const handleInactive = () => {
-        onDelete(userName);
+    const handleInactive = async () => {
+        await onDelete(userName);
+        setInputEnabled(!inputEnabled);
+    }
+
+    const handleUndo = async () => {
+        await onUndo(userName);
+        setInputEnabled(!inputEnabled);
     }
 
     return (
         <div className="Item-container">
-            { editName ? <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown}/> : <div onDoubleClick={() => isOwner ? setEditName(!editName) : null}>{inputName}</div> }
-            { editAddress ? <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown}/> : <div onDoubleClick={() => isOwner ? setEditAddress(!editAddress) : null}>{inputAddress}</div>}
+            { editName ?
+                <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown}/>
+                : <div onDoubleClick={() => isOwner ? setEditName(!editName) : null}>{inputName}</div>
+            }
+            { editAddress ?
+                <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown}/>
+                : <div onDoubleClick={() => isOwner ? setEditAddress(!editAddress) : null}>{inputAddress}</div>
+            }
             <div>{date}</div>
-            { isOwner ?
+            { isOwner && inputEnabled ?
                 <div>
-                    <button onClick={handleInactive}>Excluir</button>
+                    <button onClick={handleInactive}>Delete</button>
                 </div>
-                : ''
+                : null
+            }
+            { isOwner && !inputEnabled ?
+                <div>
+                    <button onClick={handleUndo}>Undo Delete</button>
+                </div>
+                : null
             }
         </div>
     );

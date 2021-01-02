@@ -10,7 +10,8 @@ import ListItem from './components/list/ListItem';
 import Marker from './components/marker/Marker';
 import './index.css';
 import * as constants from './constants/constants.js';
-import { addLocation, updateLocation, listLocations, listUsers, updateUser } from './functions/aws.js';
+import { listUsers, updateUser, disableUser, enableUser } from './functions/aws-user.js';
+import { addLocation, updateLocation, listLocations } from './functions/aws-location.js';
 import { AmplifyAuthenticator, AmplifySignUp, AmplifySignIn, AmplifySignOut } from '@aws-amplify/ui-react';
 
 toast.configure();
@@ -48,15 +49,78 @@ class App extends Component {
     onChangeListItem = async (username, attrs) => {
         const res = await updateUser(username, attrs);
         if (res) {
-            this.notify();
+            this.notify('Updated');
         }
     }
 
-    onDeleteListItem = async (e) => {
-        console.log(e);
+    onDeleteListItem = async (username) => {
+        //disable user
+        const res = await disableUser(username);
+        if (res) {
+            // disable its location
+            var filter = {
+                filter: {
+                    user: {
+                        eq: username
+                    }
+                }
+            };
+            let data = await listLocations(filter);
+            if (data.data?.listLocations?.items?.length > 0) {
+                data = data.data.listLocations.items[0];
+                filter = {
+                    filter: {
+                        id: {
+                            eq: data?.id
+                        }
+                    }
+                };
+                const locationDetails = {
+                    id: data?.id,
+                    user: username,
+                    lat: data?.lat,
+                    lng: data?.lng,
+                    deleted: true
+                }
+                await updateLocation(locationDetails, filter);
+                this.notify('Deleted');
+            }
+        }
     }
 
-    //@todo check if can be deleted
+    onUndoDeleteListItem = async (username) => {
+        //enable user
+        const res = await enableUser(username);
+        if (res) {
+            // disable its location
+            var filter = {
+                filter: {
+                    user: {
+                        eq: username
+                    }
+                }
+            };
+            let data = await listLocations(filter);
+            if (data.data.listLocations.items.length > 0) {
+                data = data.data.listLocations.items[0];
+                const locationDetails = {
+                    id: data.id,
+                    user: username,
+                    lat: data.lat,
+                    lng: data.lng,
+                    deleted: false,
+                    condition: {
+                        user: {
+                            eq: username
+                        }
+                    }
+                }
+                await updateLocation(locationDetails);
+                this.notify('Undoing');
+            }
+        }
+    }
+
     syncLocation = async () => {
         // Insert user's location to db
         var filter = {
@@ -69,23 +133,35 @@ class App extends Component {
         let old = await listLocations(filter);
 
         const currLoc = this.state.locations[`${this.state.current_user_id}`];
-        const locationDetails = {
-            user: this.state.current_user?.username,
-            lat: currLoc.lat,
-            lng: currLoc.lng
-        };
-        
-        if (old.data.listLocations.items.length > 0) {
-            filter = {
-                filter: {
-                    id: {
-                        eq: old.data.listLocations.items[0].id
-                    }
-                }
+        if (currLoc) {
+            var locationDetails = {
+                user: this.state.current_user?.username,
+                lat: currLoc.lat,
+                lng: currLoc.lng
             };
-            updateLocation(locationDetails, filter);
-        } else {
-            addLocation(locationDetails);
+            
+            if (old.data.listLocations.items.length > 0) {
+                const data = old.data.listLocations.items[0];
+                //avoid updating the location when he didnt move from last time he opened the app
+                if ((currLoc.lat !== data.lat || currLoc.lng !== data.lng) && data.id) {
+                    locationDetails = {
+                        id: data.id,
+                        user: this.state.current_user?.username,
+                        lat: currLoc.lat,
+                        lng: currLoc.lng,
+                        deleted: false,
+                        condition: {
+                            user: {
+                                eq: this.state.current_user?.username
+                            }
+                        }
+                    };
+                    await updateLocation(locationDetails);
+                }
+
+            } else {
+                await addLocation(locationDetails);
+            }
         }
     }
 
@@ -105,11 +181,19 @@ class App extends Component {
         });
 
         this.presenceChannel.bind('location-update', body => {
-            this.setState((prevState, props) => {
+            this.setState(async (prevState, props) => {
                 const newState = { ...prevState }
+                if (
+                    newState.current_user.lat === body.location.lat
+                    && newState.current_user.lng === body.location.lng
+                ) {
+                    //avoid updating the user if he didnt move
+                    return newState;
+                }
                 newState.locations[`${body.username}`] = body.location;
                 newState.current_user.lat = body.location.lat;
-                newState.current_user.lng = body.location.lat;
+                newState.current_user.lng = body.location.lng;
+                await this.syncLocation();
                 return newState;
             });
         });
@@ -129,7 +213,7 @@ class App extends Component {
             await this.getCredentials();
             const locations = await listLocations();
 
-            //push db's locations to the state
+            //push db's locations to this.state
             locations.data.listLocations.items.map((elem, index) => {
                 //Current user does not need to be inserted, its already being done
                 if (this.state.current_user.username && elem.user !== this.state.current_user.username) {
@@ -173,7 +257,7 @@ class App extends Component {
         }
     }
 
-    notify = () => toast(`Updated successfully!`, {
+    notify = (value) => toast(`${value} successfully!`, {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
@@ -225,7 +309,9 @@ class App extends Component {
                         address={address[0]?.Value}
                         date={date}
                         key={i}
+                        enabled={elem.Enabled}
                         isOwner={this.isOwner()}
+                        onUndo={this.onUndoDeleteListItem}
                         onChange={this.onChangeListItem}
                         onDelete={this.onDeleteListItem}
                     />

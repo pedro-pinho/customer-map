@@ -39,11 +39,13 @@ export const addLocation = `mutation createLocation($user: String! $lat:String! 
         lng
     }
 }`;
-export const updateLocation = `mutation updateLocation($user: String! $lat:String! $lng: String!) {
+export const updateLocation = `mutation updateLocation($id: ID! $user: String! $lat:String! $lng: String! $deleted: Boolean $condition: ModelLocationConditionInput) {
     updateLocation(input:{
+        id: $id
         user:$user
         lat:$lat
         lng:$lng
+        deleted:$deleted
     }, condition: $condition){
         id
         user
