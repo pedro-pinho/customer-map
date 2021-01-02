@@ -131,6 +131,27 @@ async function getUser(username) {
   }
 }
 
+async function updateUser(username, attributes) {
+  var params = {
+    UserAttributes: attributes,
+    UserPoolId: userPoolId,
+    Username: username,
+  };
+
+  console.log(`Attempting to update information for ${username}`);
+
+  try {
+    const result = await cognitoIdentityServiceProvider.adminUpdateUserAttributes(params, function(err, data) {
+      if (err) console.log(err, err.stack); // an error occurred
+      else     console.log(data);           // successful response
+    }).promise();
+    return result;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+}
+
 async function listUsers(Limit, PaginationToken) {
   const params = {
     UserPoolId: userPoolId,
@@ -251,6 +272,7 @@ module.exports = {
   disableUser,
   enableUser,
   getUser,
+  updateUser,
   listUsers,
   listGroups,
   listGroupsForUser,

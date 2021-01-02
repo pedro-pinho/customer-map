@@ -14,9 +14,11 @@
     "smsVerificationMessage": "Your verification code is {####}",
     "emailVerificationSubject": "Your verification code",
     "emailVerificationMessage": "Your verification code is {####}",
-    "defaultPasswordPolicy": false,
+    "defaultPasswordPolicy": true,
     "passwordPolicyMinLength": 8,
-    "passwordPolicyCharacters": [],
+    "passwordPolicyCharacters": [
+        "Requires Numbers"
+    ],
     "requiredAttributes": [
         "address",
         "email",
@@ -38,6 +40,7 @@
         "address",
         "email",
         "family_name",
+        "given_name",
         "name",
         "updated_at"
     ],

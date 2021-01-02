@@ -12,11 +12,6 @@
       "AmplifyAppId": "d2yw7c4rgcohc2"
     },
     "categories": {
-      "function": {
-        "customermap7fd8316f7fd8316fPostConfirmation": {
-          "GROUP": "customers"
-        }
-      },
       "auth": {
         "customermap7fd8316f7fd8316f": {}
       }

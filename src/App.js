@@ -5,15 +5,15 @@ import axios from 'axios';
 import Pusher from 'pusher-js';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { API, Auth, graphqlOperation } from "aws-amplify";
+import { Auth } from "aws-amplify";
 import ListItem from './components/list/ListItem';
 import Marker from './components/marker/Marker';
 import './index.css';
 import * as constants from './constants/constants.js';
+import { addLocation, updateLocation, listLocations, listUsers, updateUser } from './functions/aws.js';
 import { AmplifyAuthenticator, AmplifySignUp, AmplifySignIn, AmplifySignOut } from '@aws-amplify/ui-react';
 
 toast.configure();
-let nextToken;
 class App extends Component {
     constructor(props) {
         super(props);
@@ -29,85 +29,35 @@ class App extends Component {
         }
     }
 
-    // AWS backend methods
-    addLocation = async (locationDetails) => {
-        try {
-            const newLocation = await API.graphql(graphqlOperation(constants.addLocation, locationDetails));
-            console.log(JSON.stringify(newLocation));
-        } catch (err) {
-            console.error('error: ', err);
-        }
-    };
-    updateLocation = async (locationDetails, filter) => {
-        try {
-            const updatedLocation = await API.graphql(graphqlOperation(constants.updateLocation, { locationDetails, filter } ));
-            console.log(JSON.stringify(updatedLocation));
-        } catch (err) {
-            console.error('error: ', err);
-        }
-    }
-    listLocations = async (filter = null) => {
-        var allLocations;
-        try {
-            allLocations = await API.graphql(graphqlOperation(constants.listLocations, filter));
-        } catch (err) {
-            console.error('error: ', err);
-        }
-        return allLocations;
-    };
-    listUsers = async (limit) => {
-        let apiName = 'AdminQueries';
-        let path = '/listUsersInGroup';
-        let myInit = {
-            queryStringParameters: {
-                "groupname": "customers",
-                "limit": limit,
-                "token": nextToken
-            },
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `${(await Auth.currentSession()).getAccessToken().getJwtToken()}`
-            }
-        }
-        const { NextToken, ...rest } = await API.get(apiName, path, myInit);
-        try {
-            nextToken = NextToken;
-            return rest?.Users;
-        } catch (error) {
-            console.error('There as an Error', error);
-        }
-    }
-    addToOwnersGroup = async () => {
-        const apiName = 'AdminQueries';
-        const path = '/addUserToGroup';
-        const userName = this.state.current_user.username;
-        const myInit = {
-            body: {
-                "username" : userName,
-                "groupname": 'owners'
-            }, 
-            headers: {
-                'Content-Type' : 'application/json',
-                Authorization: `${(await Auth.currentSession()).getAccessToken().getJwtToken()}`
-            } 
-        }
-        const result = await API.post(apiName, path, myInit);
-        await this.getCredentials();
-        return result;
-    }
     getCurrentUserGroups = () => {
         return this.state.current_user.signInUserSession?.accessToken.payload["cognito:groups"];
-    };
+    }
+
     isOwner = () => {
         const owner = this.state.current_user_groups.filter(elem => elem === 'owners');
         return owner.length > 0;
     }
+
     getCredentials = async () => {
         const cred = await Auth.currentAuthenticatedUser();
         this.setState({ current_user: cred });
         const groups = this.getCurrentUserGroups();
         this.setState({ current_user_groups: groups });
     }
+
+    onChangeListItem = async (username, attrs) => {
+        console.log(this.state.current_user);
+        const res = await updateUser(username, attrs);
+        console.log('res', res);
+        if (res) {
+            this.notify();
+        }
+    }
+
+    onDeleteListItem = async (e) => {
+        console.log(e);
+    }
+
     //@todo check if can be deleted
     syncLocation = async () => {
         // Insert user's location to db
@@ -118,7 +68,7 @@ class App extends Component {
                 }
             }
         };
-        let old = await this.listLocations(filter);
+        let old = await listLocations(filter);
 
         const currLoc = this.state.locations[`${this.state.current_user_id}`];
         const locationDetails = {
@@ -126,7 +76,7 @@ class App extends Component {
             lat: currLoc.lat,
             lng: currLoc.lng
         };
-
+        
         if (old.data.listLocations.items.length > 0) {
             filter = {
                 filter: {
@@ -135,9 +85,9 @@ class App extends Component {
                     }
                 }
             };
-            this.updateLocation(locationDetails, filter);
+            updateLocation(locationDetails, filter);
         } else {
-            this.addLocation(locationDetails);
+            addLocation(locationDetails);
         }
     }
 
@@ -179,7 +129,7 @@ class App extends Component {
 
         try {
             await this.getCredentials();
-            const locations = await this.listLocations();
+            const locations = await listLocations();
 
             //push db's locations to the state
             locations.data.listLocations.items.map((elem, index) => {
@@ -187,12 +137,19 @@ class App extends Component {
                 if (this.state.current_user.username && elem.user !== this.state.current_user.username) {
                     this.setState((prevState, props) => {
                         const newState = { ...prevState }
-                        const usersEntry = newState.locations.filter(data => data.location.user === this.state.current_user.username);
-                        if (usersEntry) {
+                        var old = null;
+                        if (Object.keys(newState.locations).length > 0) {
+                            Object.keys(newState.locations).map((keyName, i) => {
+                                if (newState.locations[keyName].user === elem.user) {
+                                    old = newState.locations[keyName];
+                                }
+                            });
+                        }
+                        if (old) {
                             // Found this user on the array that comes from the node server, update this one
-                            newState.locations[`${usersEntry.username}`] = {
+                            newState.locations[`${old.username}`] = {
                                 lat: elem.lat,
-                                lng: elem.lat,
+                                lng: elem.lng,
                                 user: elem.user
                             }
                         } else {
@@ -211,14 +168,22 @@ class App extends Component {
             });
 
             //Show list
-            if (this.isOwner()) {
-                const users = await this.listUsers(10);
-                this.setState({ users: users });
-            }
+            const users = await listUsers(10);
+            this.setState({ users: users });
         } catch (err) {
             console.error('error: ', err);
         }
     }
+
+    notify = () => toast(`Updated successfully!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        type: 'info'
+    });
 
     getLocation = () => {
         if ("geolocation" in navigator) {
@@ -250,17 +215,21 @@ class App extends Component {
                 const address = elem.Attributes.filter(data => data.Name === 'address');
 
                 let date = new Date(elem.UserCreateDate);
+                if (!date) {
+                    date = new Date();
+                }
                 date = new Intl.DateTimeFormat('pt-BR').format(date);
 
                 return (
                     <ListItem
+                        userName={elem.Username}
                         name={name[0]?.Value + ' ' + lastName[0]?.Value}
                         address={address[0]?.Value}
                         date={date}
                         key={i}
-                        //@todo: add those methods
-                        //onChange={(event) => updateUser(event, index)}
-                        //onDelete={() => deleteUser(index)}
+                        isOwner={this.isOwner()}
+                        onChange={this.onChangeListItem}
+                        onDelete={this.onDeleteListItem}
                     />
                 );
             });
@@ -290,7 +259,7 @@ class App extends Component {
                 <AmplifySignIn slot="sign-in" />
                 <AmplifySignOut />
                 <div className="App" >
-                    { !this.isOwner() ? <button onClick={this.addToOwnersGroup} >I am an Owner!</button> : userList}
+                    {userList}
                     <div className="App-body">
                         <div style={{ width: '100%', height: '800px', 'paddingTop': '150px' }}>
                             <GoogleMap

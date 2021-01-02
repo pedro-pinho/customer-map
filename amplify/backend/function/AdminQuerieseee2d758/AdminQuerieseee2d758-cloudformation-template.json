@@ -68,7 +68,7 @@
         "Timeout": "25",
         "Code": {
           "S3Bucket": "amplify-customermap-dev-101721-deployment",
-          "S3Key": "amplify-builds/AdminQuerieseee2d758-634743794b4273496575-build.zip"
+          "S3Key": "amplify-builds/AdminQuerieseee2d758-565078575377384b7061-build.zip"
         }
       }
     },
