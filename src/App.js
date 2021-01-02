@@ -133,7 +133,7 @@ class App extends Component {
         let old = await listLocations(filter);
 
         const currLoc = this.state.locations[`${this.state.current_user_id}`];
-        if (currLoc) {
+        if (currLoc && old) {
             var locationDetails = {
                 user: this.state.current_user?.username,
                 lat: currLoc.lat,
@@ -212,7 +212,6 @@ class App extends Component {
         try {
             await this.getCredentials();
             const locations = await listLocations();
-
             //push db's locations to this.state
             locations.data.listLocations.items.map((elem, index) => {
                 //Current user does not need to be inserted, its already being done
@@ -227,21 +226,18 @@ class App extends Component {
                                 }
                             });
                         }
-                        if (old) {
+                        const newLocation = {
+                            lat: elem.lat,
+                            lng: elem.lng,
+                            user: elem.user
+                        }
+                        if (old && typeof old === 'object') {
                             // Found this user on the array that comes from the node server, update this one
-                            newState.locations[`${old.username}`] = {
-                                lat: elem.lat,
-                                lng: elem.lng,
-                                user: elem.user
-                            }
+                            newState.locations[`${old.username}`] = newLocation;
                         } else {
                             // New user, push it to state so its painted on the screen
                             let random_string = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
-                            newState.locations[`${random_string}`] = {
-                                lat: elem.lat,
-                                lng: elem.lat,
-                                user: elem.user
-                            }
+                            newState.locations[`${random_string}`] = newLocation;
                         }
                         return newState;
                     });
@@ -341,18 +337,39 @@ class App extends Component {
                     formFields={constants.signUpConfig.signUpFields} 
                 />
                 <AmplifySignIn slot="sign-in" />
-                <AmplifySignOut />
                 <div className="App" >
-                    {userList}
                     <div className="App-body">
-                        <div style={{ width: '100%', height: '800px', 'paddingTop': '150px' }}>
-                            <GoogleMap
-                                bootstrapURLKeys={{ key: constants.bootstrapURLKeys }}
-                                center={this.state.center}
-                                zoom={14}
-                            >
-                                {locationMarkers}
-                            </GoogleMap>
+                        <nav className="navbar navbar-light bg-light">
+                            <span className="navbar-brand mb-0 h1">Customer Map</span>
+                            <AmplifySignOut />
+                        </nav>
+                        <div className="container">
+                            <div className="row">
+                                <div className="col">
+                                    <div className="row justify-content-center">
+                                        <div className="col">
+                                            <div className="card-deck">
+                                                {userList}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="row pt-3">
+                                        <div className="col">
+                                            <div className="card">
+                                                <GoogleMap
+                                                    bootstrapURLKeys={{ key: constants.bootstrapURLKeys }}
+                                                    center={this.state.center}
+                                                    zoom={14}
+                                                    style={{ width: '100%', height: '50vh' }}
+                                                >
+                                                    {locationMarkers}
+                                                </GoogleMap>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

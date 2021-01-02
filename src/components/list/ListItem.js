@@ -46,28 +46,38 @@ function ListItem({ onChange, onDelete, onUndo, userName, name, address, date, i
     }
 
     return (
-        <div className="Item-container">
-            { editName ?
-                <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown}/>
-                : <div onDoubleClick={() => isOwner ? setEditName(!editName) : null}>{inputName}</div>
-            }
-            { editAddress ?
-                <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown}/>
-                : <div onDoubleClick={() => isOwner ? setEditAddress(!editAddress) : null}>{inputAddress}</div>
-            }
-            <div>{date}</div>
-            { isOwner && inputEnabled ?
-                <div>
-                    <button onClick={handleInactive}>Delete</button>
-                </div>
-                : null
-            }
-            { isOwner && !inputEnabled ?
-                <div>
-                    <button onClick={handleUndo}>Undo Delete</button>
-                </div>
-                : null
-            }
+        <div class="card mt-3" style={{ width: '18rem' }}>
+            <div class="card-body">
+                <h5 class="card-title">
+                    { editName ?
+                    <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown}/>
+                    : <div onDoubleClick={() => isOwner ? setEditName(!editName) : null}>{inputName}</div>
+                    }
+                </h5>
+                <p class="card-text">
+                    { editAddress ?
+                        <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown}/>
+                        : <div onDoubleClick={() => isOwner ? setEditAddress(!editAddress) : null}>{inputAddress}</div>
+                    }
+                </p>
+                <p class="card-text">
+                    <small class="text-muted">
+                        {date}
+                    </small>
+                </p>
+                { isOwner && inputEnabled ?
+                    <div class="text-right">
+                        <button class="btn btn-warning" onClick={handleInactive}>Delete</button>
+                    </div>
+                    : null
+                }
+                { isOwner && !inputEnabled ?
+                    <div class="text-right">
+                        <button class="btn btn-secondary" onClick={handleUndo}>Undo Delete</button>
+                    </div>
+                    : null
+                }
+            </div>
         </div>
     );
 }
