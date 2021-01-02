@@ -46,9 +46,7 @@ class App extends Component {
     }
 
     onChangeListItem = async (username, attrs) => {
-        console.log(this.state.current_user);
         const res = await updateUser(username, attrs);
-        console.log('res', res);
         if (res) {
             this.notify();
         }

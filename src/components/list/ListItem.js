@@ -9,7 +9,7 @@ function ListItem({ onChange, onDelete, userName, name, address, date, isOwner }
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
-            let names = inputName.split(' ');
+            let names = inputName.split(/ (.+)/);
             onChange(userName,[                                                                                                                                                                                     
                 {                                                                                                                                                                                                 
                     Name: 'name',                                                                                                                                                             
@@ -17,7 +17,7 @@ function ListItem({ onChange, onDelete, userName, name, address, date, isOwner }
                 },                                                                                                                                                                                                
                 {                                                                                                                                                                                                 
                     Name: 'family_name',                                                                                                                                                                          
-                    Value: names[names.length - 1]                                                                                                                                                                        
+                    Value: names[1]                                                                                                                                                                        
                 },                                                                                                                                                                                             
                 {                                                                                                                                                                                                 
                     Name: 'address',                                                                                                                                                                          
@@ -39,8 +39,8 @@ function ListItem({ onChange, onDelete, userName, name, address, date, isOwner }
 
     return (
         <div className="Item-container">
-            { editName ? <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown}/> : <div onDoubleClick={() => isOwner ? setEditName(!editName) : null}>{name}</div> }
-            { editAddress ? <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown}/> : <div onDoubleClick={() => isOwner ? setEditAddress(!editAddress) : null}>{address}</div>}
+            { editName ? <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown}/> : <div onDoubleClick={() => isOwner ? setEditName(!editName) : null}>{inputName}</div> }
+            { editAddress ? <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown}/> : <div onDoubleClick={() => isOwner ? setEditAddress(!editAddress) : null}>{inputAddress}</div>}
             <div>{date}</div>
             { isOwner ?
                 <div>
