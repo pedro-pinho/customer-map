@@ -1,6 +1,104 @@
 import React, { useState } from 'react';
+import { listLocations, updateLocation } from '../../api/Location';
+import { disableUser, enableUser, updateUser } from '../../api/User';
+import Notify from '../toast/Toast';
 
-function Row({ onChange, onDelete, onUndo, onClick, userName, name, address, date, isOwner, enabled }) {
+const ChangeListItem = async (username, attrs) => {
+    const res = await updateUser(username, attrs);
+    if (res) {
+        Notify('Updated successfully!', 'info');
+    }
+}
+
+const DeleteListItem = async (username, current, dispatch) => {    
+    if (username !== current) {
+        //disable user
+        const res = await disableUser(username);
+        if (res) {
+            // disable its location
+            var filter = {
+                filter: {
+                    user: {
+                        eq: username
+                    }
+                }
+            };
+            let data = await listLocations(filter);
+            if (data.data?.listLocations?.items?.length > 0) {
+                data = data.data.listLocations.items[0];
+                filter = {
+                    filter: {
+                        id: {
+                            eq: data?.id
+                        }
+                    }
+                };
+                const locationDetails = {
+                    id: data?.id,
+                    user: username,
+                    lat: data?.lat,
+                    lng: data?.lng,
+                    deleted: true
+                }
+                await updateLocation(locationDetails, filter);
+                //remove from state
+                dispatch({type: 'locations/locationDeletedByUser', payload: username})
+                Notify('Deleted successfully!', 'info');
+                return true;
+            }
+        }
+        Notify('Something bad happened! Please try again later.', 'error');
+    } else {
+        Notify('You can\'t delete yourself!', 'error');
+    }
+    return false;
+}
+
+const UndoDeleteListItem = async (username, dispatch) => {
+    //enable user
+    const res = await enableUser(username);
+    if (res) {
+        // enable its location
+        var filter = {
+            filter: {
+                user: {
+                    eq: username
+                }
+            }
+        };
+        let data = await listLocations(filter);
+        if (data.data.listLocations.items.length > 0) {
+            data = data.data.listLocations.items[0];
+            const newLocation = {
+                lat: data.lat,
+                lng: data.lng,
+                user: username,
+                deleted: false,
+            }
+            const locationDetails = {
+                id: data.id,
+                condition: {
+                    user: {
+                        eq: username
+                    }
+                }
+            }
+            await updateLocation({...newLocation, ...locationDetails });
+            dispatch({type: 'locations/locationAdded', payload: newLocation});
+            Notify('Undid successfully!', 'info');
+        }
+    }
+}
+
+const RowClick = (username, locations, dispatch) => {
+    let key = Object.keys(locations).filter(e => locations[e].user === username);
+    if (key && locations[key]) {
+        const center = { lat: parseFloat(locations[key].lat), lng: parseFloat(this.state.locations[key].lng) };
+        dispatch({type: 'locations/centedChanged', payload: center})
+    }
+}
+
+function Row({ userName, name, address, date, isOwner, enabled, dispatch, state }) {
     const [editName, setEditName] = useState(0);
     const [editAddress, setEditAddress] = useState(0);
 
@@ -17,7 +115,7 @@ function Row({ onChange, onDelete, onUndo, onClick, userName, name, address, dat
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             let names = inputName.split(/ (.+)/);
-            onChange(userName,[                                                                                                                                                                                     
+            ChangeListItem(userName,[                                                                                                                                                                                     
                 {                                                                                                                                                                                                 
                     Name: 'name',                                                                                                                                                             
                     Value: names[0]                                                                                                                                                           
@@ -43,7 +141,7 @@ function Row({ onChange, onDelete, onUndo, onClick, userName, name, address, dat
     const handleDelete = async () => {
         if (!isLoading) {
             setIsLoading(1);
-            const success = await onDelete(userName);
+            const success = await DeleteListItem(userName, state.current_user?.username, dispatch);
             setIsLoading(0);
             if (success) {
                 setInputEnabled(!inputEnabled);
@@ -54,14 +152,14 @@ function Row({ onChange, onDelete, onUndo, onClick, userName, name, address, dat
     const handleUndo = async () => {
         if (!isLoading) {
             setIsLoading(1);
-            await onUndo(userName);
+            await UndoDeleteListItem(userName, dispatch);
             setInputEnabled(!inputEnabled);
             setIsLoading(0);
         }
     }
 
     const handleClick = async () => {
-        onClick(userName);
+        RowClick(userName, state.locations, dispatch);
     }
 
     const handleNameOnBlur = () => {

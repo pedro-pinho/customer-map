@@ -1,10 +1,10 @@
 import React from 'react';
 import Row from './Row';
 
-const Table = ({ userList, isOwner, onUndoDelete, onChange, onDelete, onClick }) => {
+const Table = ({ dispatch, state, users, isOwner }) => {
     let rows = [];
-    if (userList) {
-        rows = userList.map((elem, i) => {
+    if (users) {
+        rows = users.map((elem, i) => {
             const name = elem.Attributes.filter(data => data.Name === 'name');
             const lastName = elem.Attributes.filter(data => data.Name === 'family_name');
             const address = elem.Attributes.filter(data => data.Name === 'address');
@@ -24,10 +24,8 @@ const Table = ({ userList, isOwner, onUndoDelete, onChange, onDelete, onClick })
                     key={i}
                     enabled={elem.Enabled}
                     isOwner={isOwner}
-                    onClick={onClick}
-                    onUndo={onUndoDelete}
-                    onChange={onChange}
-                    onDelete={onDelete}
+                    dispatch={dispatch}
+                    state={state}
                 />
             );
         });
