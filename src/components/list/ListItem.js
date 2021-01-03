@@ -7,7 +7,10 @@ function ListItem({ onChange, onDelete, onUndo, onCardClick, userName, name, add
     const [isLoading, setIsLoading] = useState(0);
 
     const [inputName, setInputName] = useState(name);
+    const [inputOldName, setInputOldName] = useState(name);
+
     const [inputAddress, setInputAddress] = useState(address);
+    const [inputOldAddress, setInputOldAddress] = useState(address);
 
     const [inputEnabled, setInputEnabled] = useState(enabled);
 
@@ -61,17 +64,27 @@ function ListItem({ onChange, onDelete, onUndo, onCardClick, userName, name, add
         onCardClick(userName);
     }
 
+    const handleNameOnBlur = () => {
+        setEditName(!editName);
+        setInputName(inputOldName);
+    }
+
+    const handleAddressOnBlur = () => {
+        setEditAddress(!editAddress);
+        setInputAddress(inputOldAddress);
+    }
+
     return (
         <tr>
             <td onClick={handleClick} data-title="Full Name">
                 { editName ?
-                <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown} onBlur={() => setEditName(!editName)}/>
+                <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown} onBlur={handleNameOnBlur}/>
                 : <div data-toggle="tooltip" data-placement="top" title="Double click to edit" onDoubleClick={() => isOwner ? setEditName(!editName) : null}>{inputName}</div>
                 }
             </td>
             <td onClick={handleClick} data-title="Address">
                 { editAddress ?
-                    <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown} onBlur={() => setEditAddress(!editAddress)}/>
+                    <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown} onBlur={handleAddressOnBlur}/>
                     : <p data-toggle="tooltip" data-placement="top" title="Double click to edit" onDoubleClick={() => isOwner ? setEditAddress(!editAddress) : null}>{inputAddress}</p>
                 }
             </td>

@@ -31,9 +31,6 @@ Customer’s list should have an option to:
 - How do we update the map and the list at the same time?
 - Should I block routes to avoid an unlogged person changing the info? 
 
-#### Check the demo
-[here](https://master.d2yw7c4rgcohc2.amplifyapp.com/)
-
 #### How to run
 
 You need [node.js](https://nodejs.org/en/download/) to run this project, and amplify-cli
@@ -47,7 +44,6 @@ cd server/
 npm install
 npm start
 ```
-
 On another command line
 ```
 npm install
