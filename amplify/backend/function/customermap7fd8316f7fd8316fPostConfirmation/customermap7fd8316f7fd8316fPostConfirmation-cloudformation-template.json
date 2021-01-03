@@ -103,7 +103,8 @@
         "Code": {
           "S3Bucket": "amplify-customermap-dev-101721-deployment",
           "S3Key": "amplify-builds/customermap7fd8316f7fd8316fPostConfirmation-6b5054346c4c6e626632-build.zip"
-        }
+        },
+        "Layers": []
       }
     },
     "LambdaExecutionRole": {

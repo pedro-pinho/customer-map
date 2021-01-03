@@ -9,6 +9,7 @@ import { Auth } from "aws-amplify";
 import ListItem from './components/list/ListItem';
 import Marker from './components/marker/Marker';
 import './index.css';
+import './App.css';
 import * as constants from './constants/constants.js';
 import { listUsers, updateUser, disableUser, enableUser } from './functions/aws-user.js';
 import { addLocation, updateLocation, listLocations } from './functions/aws-location.js';
@@ -19,7 +20,7 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            //center fixed to bauru city hall
+            //center to bauru city hall
             center: { lat: -22.330741676472787, lng: -49.07009477316554 },
             locations: {},
             users_online: [],
@@ -30,10 +31,6 @@ class App extends Component {
         }
     }
 
-    getCurrentUserGroups = () => {
-        return this.state.current_user.signInUserSession?.accessToken.payload["cognito:groups"];
-    }
-
     isOwner = () => {
         const owner = this.state.current_user_groups.filter(elem => elem === 'owners');
         return owner.length > 0;
@@ -42,7 +39,7 @@ class App extends Component {
     getCredentials = async () => {
         const cred = await Auth.currentAuthenticatedUser();
         this.setState({ current_user: cred });
-        const groups = this.getCurrentUserGroups();
+        const groups = this.state.current_user.signInUserSession?.accessToken.payload["cognito:groups"];
         this.setState({ current_user_groups: groups });
     }
 
@@ -84,6 +81,7 @@ class App extends Component {
                 }
                 await updateLocation(locationDetails, filter);
                 this.notify('Deleted');
+                await this.load();
             }
         }
     }
@@ -92,7 +90,7 @@ class App extends Component {
         //enable user
         const res = await enableUser(username);
         if (res) {
-            // disable its location
+            // enable its location
             var filter = {
                 filter: {
                     user: {
@@ -117,7 +115,27 @@ class App extends Component {
                 }
                 await updateLocation(locationDetails);
                 this.notify('Undoing');
+                await this.load();
             }
+        }
+    }
+
+    onCardClick = (username) => {
+        let key = Object.keys(this.state.locations).filter(i => {
+            const curr = this.state.locations[i];
+            if (i !== 'undefined' && curr) {
+                if (typeof curr.user === "undefined") {
+                    curr.user = this.state.current_user.username;
+                }
+                if (!curr.deleted && curr.user === username) {
+                    return curr;
+                }
+            }
+            return null;
+        });
+        if (key && this.state.locations[key]) {
+            const center = { lat: parseFloat(this.state.locations[key].lat), lng: parseFloat(this.state.locations[key].lng) };
+            this.setState({ center: center });
         }
     }
 
@@ -165,6 +183,49 @@ class App extends Component {
         }
     }
 
+    load = async() => {
+        try {
+            await this.getCredentials();
+            const locations = await listLocations();
+            //push db's locations to this.state
+            locations.data.listLocations.items.map((elem, index) => {
+                //Current user does not need to be inserted, its already being done
+                if (this.state.current_user.username && elem.user !== this.state.current_user.username) {
+                    this.setState((prevState, props) => {
+                        const newState = { ...prevState }
+                        var old = null;
+                        if (Object.keys(newState.locations).length > 0) {
+                            Object.keys(newState.locations).map((keyName, i) => {
+                                if (newState.locations[keyName].user === elem.user) {
+                                    old = newState.locations[keyName];
+                                }
+                                return null;
+                            });
+                        }
+                        const newLocation = {
+                            lat: elem.lat,
+                            lng: elem.lng,
+                            user: elem.user,
+                            deleted: elem.deleted,
+                        }
+                        if (old && typeof old === 'object' && old.username !== 'undefined') {
+                            // Found this user on the array that comes from the node server, update this one
+                            newState.locations[`${old.username}`] = newLocation;
+                        } else {
+                            // New user, push it to state so its painted on the screen
+                            let random_string = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+                            newState.locations[`${random_string}`] = newLocation;
+                        }
+                        return newState;
+                    });
+                }
+                return elem;
+            });
+        } catch (err) {
+            console.error('error: ', err);
+        }
+    }
+
     async componentDidMount() {
         var pusher = new Pusher('538f505398eab7878781', {
             authEndpoint: "http://localhost:3128/pusher/auth",
@@ -209,48 +270,10 @@ class App extends Component {
             })
         });
 
-        try {
-            await this.getCredentials();
-            const locations = await listLocations();
-            //push db's locations to this.state
-            locations.data.listLocations.items.map((elem, index) => {
-                //Current user does not need to be inserted, its already being done
-                if (this.state.current_user.username && elem.user !== this.state.current_user.username) {
-                    this.setState((prevState, props) => {
-                        const newState = { ...prevState }
-                        var old = null;
-                        if (Object.keys(newState.locations).length > 0) {
-                            Object.keys(newState.locations).map((keyName, i) => {
-                                if (newState.locations[keyName].user === elem.user) {
-                                    old = newState.locations[keyName];
-                                }
-                            });
-                        }
-                        const newLocation = {
-                            lat: elem.lat,
-                            lng: elem.lng,
-                            user: elem.user
-                        }
-                        if (old && typeof old === 'object') {
-                            // Found this user on the array that comes from the node server, update this one
-                            newState.locations[`${old.username}`] = newLocation;
-                        } else {
-                            // New user, push it to state so its painted on the screen
-                            let random_string = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
-                            newState.locations[`${random_string}`] = newLocation;
-                        }
-                        return newState;
-                    });
-                }
-                return elem;
-            });
-
-            //Show list
-            const users = await listUsers(10);
-            this.setState({ users: users });
-        } catch (err) {
-            console.error('error: ', err);
-        }
+        this.load();
+        //Show list
+        const users = await listUsers(10);
+        this.setState({ users: users });
     }
 
     notify = (value) => toast(`${value} successfully!`, {
@@ -310,6 +333,7 @@ class App extends Component {
                         onUndo={this.onUndoDeleteListItem}
                         onChange={this.onChangeListItem}
                         onDelete={this.onDeleteListItem}
+                        onCardClick={this.onCardClick}
                     />
                 );
             });
@@ -319,15 +343,18 @@ class App extends Component {
             if (typeof curr.user === "undefined") {
                 curr.user = this.state.current_user.username;
             }
-            return (
-                <Marker
-                    key={id}
-                    title={`${curr.user === this.state.current_user.username ? 'My location' : curr.user + "'s location"}`}
-                    lat={curr.lat}
-                    lng={curr.lng}
-                >
-                </Marker>
-            );
+            if (!curr.deleted) {
+                return (
+                    <Marker
+                        key={id}
+                        title={`${curr.user === this.state.current_user.username ? 'My location' : curr.user + "'s location"}`}
+                        lat={curr.lat}
+                        lng={curr.lng}
+                    >
+                    </Marker>
+                );
+            }
+            return null;
         });
         return (
             <AmplifyAuthenticator>
@@ -340,18 +367,26 @@ class App extends Component {
                 <div className="App" >
                     <div className="App-body">
                         <nav className="navbar navbar-light bg-light">
-                            <span className="navbar-brand mb-0 h1">Customer Map</span>
+                            <span className="navbar-brand mb-0 h1">LawnGuru Code Challenge</span>
                             <AmplifySignOut />
                         </nav>
                         <div className="container">
                             <div className="row">
                                 <div className="col">
-                                    <div className="row justify-content-center">
-                                        <div className="col">
-                                            <div className="card-deck">
+                                    <div className="table-wrapper">
+                                        <table className="table-responsive card-list-table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Name</th>
+                                                    <th scope="col">Address</th>
+                                                    <th scope="col">Date Creation</th>
+                                                    <th scope="col"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
                                                 {userList}
-                                            </div>
-                                        </div>
+                                            </tbody>
+                                        </table>
                                     </div>
                                     <div className="row pt-3">
                                         <div className="col">

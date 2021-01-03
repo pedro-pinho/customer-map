@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function ListItem({ onChange, onDelete, onUndo, userName, name, address, date, isOwner, enabled }) {
+function ListItem({ onChange, onDelete, onUndo, onCardClick, userName, name, address, date, isOwner, enabled }) {
     const [editName, setEditName] = useState(0);
     const [editAddress, setEditAddress] = useState(0);
 
@@ -45,40 +45,41 @@ function ListItem({ onChange, onDelete, onUndo, userName, name, address, date, i
         setInputEnabled(!inputEnabled);
     }
 
+    const handleClick = async () => {
+        onCardClick(userName);
+    }
+
     return (
-        <div class="card mt-3" style={{ width: '18rem' }}>
-            <div class="card-body">
-                <h5 class="card-title">
-                    { editName ?
-                    <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown}/>
-                    : <div onDoubleClick={() => isOwner ? setEditName(!editName) : null}>{inputName}</div>
-                    }
-                </h5>
-                <p class="card-text">
-                    { editAddress ?
-                        <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown}/>
-                        : <div onDoubleClick={() => isOwner ? setEditAddress(!editAddress) : null}>{inputAddress}</div>
-                    }
-                </p>
-                <p class="card-text">
-                    <small class="text-muted">
-                        {date}
-                    </small>
-                </p>
+        <tr onClick={handleClick}>
+            <td data-title="Full Name">
+                { editName ?
+                <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown}/>
+                : <div data-toggle="tooltip" data-placement="top" title="Double click to edit" onDoubleClick={() => isOwner ? setEditName(!editName) : null}>{inputName}</div>
+                }
+            </td>
+            <td data-title="Address">
+                { editAddress ?
+                    <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown}/>
+                    : <p data-toggle="tooltip" data-placement="top" title="Double click to edit" onDoubleClick={() => isOwner ? setEditAddress(!editAddress) : null}>{inputAddress}</p>
+                }
+            </td>
+            <td data-title="Address">
+                <small className="text-muted">
+                    {date}
+                </small>
+            </td>
+            <td data-title="Actions">
                 { isOwner && inputEnabled ?
-                    <div class="text-right">
-                        <button class="btn btn-warning" onClick={handleInactive}>Delete</button>
-                    </div>
+                    <button className="btn btn-warning mt-auto align-self-end" onClick={handleInactive}>Delete</button>
                     : null
                 }
                 { isOwner && !inputEnabled ?
-                    <div class="text-right">
-                        <button class="btn btn-secondary" onClick={handleUndo}>Undo Delete</button>
-                    </div>
+                    <button className="btn btn-secondary mt-auto align-self-end" onClick={handleUndo}>Undo Delete</button>
                     : null
                 }
-            </div>
-        </div>
+            </td>
+        </tr>
+        
     );
 }
 

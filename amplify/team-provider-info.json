@@ -14,6 +14,11 @@
     "categories": {
       "auth": {
         "customermap7fd8316f7fd8316f": {}
+      },
+      "function": {
+        "customermap7fd8316f7fd8316fPostConfirmation": {
+          "GROUP": "customers"
+        }
       }
     }
   }

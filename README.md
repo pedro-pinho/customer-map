@@ -30,3 +30,26 @@ Customer’s list should have an option to:
 - Is it really necessary to delete a customer?
 - How do we update the map and the list at the same time?
 - Should I block routes to avoid an unlogged person changing the info? 
+
+#### Check the demo
+[here](https://master.d2yw7c4rgcohc2.amplifyapp.com/)
+
+#### How to run
+
+You need [node.js](https://nodejs.org/en/download/) to run this project, and amplify-cli
+```
+npm install -g @aws-amplify/cli
+```
+
+Run the following commands on the root of the application
+```
+cd server/
+npm install
+npm start
+```
+
+On another command line
+```
+npm install
+npm start
+```

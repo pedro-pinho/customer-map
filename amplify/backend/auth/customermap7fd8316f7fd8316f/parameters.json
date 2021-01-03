@@ -63,11 +63,14 @@
     },
     "useDefault": "manual",
     "thirdPartyAuth": false,
-    "userPoolGroups": false,
+    "userPoolGroups": true,
     "adminQueries": true,
     "triggers": "{\n  \"PostConfirmation\": [\n    \"add-to-group\"\n  ]\n}",
     "hostedUI": false,
-    "userPoolGroupList": [],
+    "userPoolGroupList": [
+        "owners",
+        "customers"
+    ],
     "adminQueryGroup": "owners",
     "serviceName": "Cognito",
     "usernameCaseSensitive": false,
