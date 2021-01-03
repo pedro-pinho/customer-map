@@ -4,6 +4,8 @@ function ListItem({ onChange, onDelete, onUndo, onCardClick, userName, name, add
     const [editName, setEditName] = useState(0);
     const [editAddress, setEditAddress] = useState(0);
 
+    const [isLoading, setIsLoading] = useState(0);
+
     const [inputName, setInputName] = useState(name);
     const [inputAddress, setInputAddress] = useState(address);
 
@@ -35,14 +37,24 @@ function ListItem({ onChange, onDelete, onUndo, onCardClick, userName, name, add
         }
     }
 
-    const handleInactive = async () => {
-        await onDelete(userName);
-        setInputEnabled(!inputEnabled);
+    const handleDelete = async () => {
+        if (!isLoading) {
+            setIsLoading(1);
+            const success = await onDelete(userName);
+            setIsLoading(0);
+            if (success) {
+                setInputEnabled(!inputEnabled);
+            }
+        }
     }
 
     const handleUndo = async () => {
-        await onUndo(userName);
-        setInputEnabled(!inputEnabled);
+        if (!isLoading) {
+            setIsLoading(1);
+            await onUndo(userName);
+            setInputEnabled(!inputEnabled);
+            setIsLoading(0);
+        }
     }
 
     const handleClick = async () => {
@@ -50,31 +62,43 @@ function ListItem({ onChange, onDelete, onUndo, onCardClick, userName, name, add
     }
 
     return (
-        <tr onClick={handleClick}>
-            <td data-title="Full Name">
+        <tr>
+            <td onClick={handleClick} data-title="Full Name">
                 { editName ?
-                <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown}/>
+                <input type="text" value={inputName} onInput={e => setInputName(e.target.value)} onKeyDown={handleKeyDown} onBlur={() => setEditName(!editName)}/>
                 : <div data-toggle="tooltip" data-placement="top" title="Double click to edit" onDoubleClick={() => isOwner ? setEditName(!editName) : null}>{inputName}</div>
                 }
             </td>
-            <td data-title="Address">
+            <td onClick={handleClick} data-title="Address">
                 { editAddress ?
-                    <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown}/>
+                    <input type="text" value={inputAddress} onInput={e => setInputAddress(e.target.value)} onKeyDown={handleKeyDown} onBlur={() => setEditAddress(!editAddress)}/>
                     : <p data-toggle="tooltip" data-placement="top" title="Double click to edit" onDoubleClick={() => isOwner ? setEditAddress(!editAddress) : null}>{inputAddress}</p>
                 }
             </td>
-            <td data-title="Address">
+            <td onClick={handleClick} data-title="Address">
                 <small className="text-muted">
                     {date}
                 </small>
             </td>
             <td data-title="Actions">
                 { isOwner && inputEnabled ?
-                    <button className="btn btn-warning mt-auto align-self-end" onClick={handleInactive}>Delete</button>
+                    <div onClick={handleDelete}>
+                        <button className="btn btn-warning mt-auto align-self-end">
+                            { isLoading ?
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                : <span className="title">Delete</span>}
+                        </button>
+                    </div>
                     : null
                 }
                 { isOwner && !inputEnabled ?
-                    <button className="btn btn-secondary mt-auto align-self-end" onClick={handleUndo}>Undo Delete</button>
+                    <div onClick={handleUndo}>
+                        <button className="btn btn-secondary mt-auto align-self-end">
+                            { isLoading ?
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                : <span className="title">Undo</span> }
+                        </button>
+                    </div>
                     : null
                 }
             </td>

@@ -46,44 +46,59 @@ class App extends Component {
     onChangeListItem = async (username, attrs) => {
         const res = await updateUser(username, attrs);
         if (res) {
-            this.notify('Updated');
+            this.notify('Updated successfully!', 'info');
         }
     }
 
     onDeleteListItem = async (username) => {
-        //disable user
-        const res = await disableUser(username);
-        if (res) {
-            // disable its location
-            var filter = {
-                filter: {
-                    user: {
-                        eq: username
-                    }
-                }
-            };
-            let data = await listLocations(filter);
-            if (data.data?.listLocations?.items?.length > 0) {
-                data = data.data.listLocations.items[0];
-                filter = {
+        if (username !== this.state.current_user?.username) {
+            //disable user
+            const res = await disableUser(username);
+            if (res) {
+                // disable its location
+                var filter = {
                     filter: {
-                        id: {
-                            eq: data?.id
+                        user: {
+                            eq: username
                         }
                     }
                 };
-                const locationDetails = {
-                    id: data?.id,
-                    user: username,
-                    lat: data?.lat,
-                    lng: data?.lng,
-                    deleted: true
+                let data = await listLocations(filter);
+                if (data.data?.listLocations?.items?.length > 0) {
+                    data = data.data.listLocations.items[0];
+                    filter = {
+                        filter: {
+                            id: {
+                                eq: data?.id
+                            }
+                        }
+                    };
+                    const locationDetails = {
+                        id: data?.id,
+                        user: username,
+                        lat: data?.lat,
+                        lng: data?.lng,
+                        deleted: true
+                    }
+                    await updateLocation(locationDetails, filter);
+                    //remove from state
+                    this.setState(prevState => ({
+                        locations: Object.keys(prevState.locations)
+                        .filter(e => prevState.locations[e].user !== username)
+                        .reduce((obj, key) => {
+                            obj[key] = prevState.locations[key];
+                            return obj;
+                        }, {})
+                    }));
+                    this.notify('Deleted successfully!', 'info');
+                    return true;
                 }
-                await updateLocation(locationDetails, filter);
-                this.notify('Deleted');
-                await this.load();
             }
+            this.notify('Something bad happened! Please try again later.', 'error');
+        } else {
+            this.notify('You can\'t delete yourself!', 'error');
         }
+        return false;
     }
 
     onUndoDeleteListItem = async (username) => {
@@ -114,25 +129,25 @@ class App extends Component {
                     }
                 }
                 await updateLocation(locationDetails);
-                this.notify('Undoing');
-                await this.load();
+                this.setState((prevState, props) => {
+                    const newState = { ...prevState }
+                    const newLocation = {
+                        lat: data.lat,
+                        lng: data.lng,
+                        user: username,
+                        deleted: false,
+                    }
+                    let random_string = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5);
+                    newState.locations[`${random_string}`] = newLocation;
+                    return newState;
+                });
+                this.notify('Undid successfully!', 'info');
             }
         }
     }
 
     onCardClick = (username) => {
-        let key = Object.keys(this.state.locations).filter(i => {
-            const curr = this.state.locations[i];
-            if (i !== 'undefined' && curr) {
-                if (typeof curr.user === "undefined") {
-                    curr.user = this.state.current_user.username;
-                }
-                if (!curr.deleted && curr.user === username) {
-                    return curr;
-                }
-            }
-            return null;
-        });
+        let key = Object.keys(this.state.locations).filter(e => this.state.locations[e].user === username);
         if (key && this.state.locations[key]) {
             const center = { lat: parseFloat(this.state.locations[key].lat), lng: parseFloat(this.state.locations[key].lng) };
             this.setState({ center: center });
@@ -185,7 +200,6 @@ class App extends Component {
 
     load = async() => {
         try {
-            await this.getCredentials();
             const locations = await listLocations();
             //push db's locations to this.state
             locations.data.listLocations.items.map((elem, index) => {
@@ -269,21 +283,21 @@ class App extends Component {
                 return newState;
             })
         });
-
+        await this.getCredentials();
         this.load();
         //Show list
         const users = await listUsers(10);
         this.setState({ users: users });
     }
 
-    notify = (value) => toast(`${value} successfully!`, {
+    notify = (value, type) => toast(value, {
         position: "top-right",
         autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
-        type: 'info'
+        type: type
     });
 
     getLocation = () => {
