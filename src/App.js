@@ -1,19 +1,21 @@
 import React, { Component } from 'react';
-import GoogleMap from 'google-map-react';
 
+import GoogleMap from 'google-map-react';
 import axios from 'axios';
 import Pusher from 'pusher-js';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Auth } from "aws-amplify";
-import ListItem from './components/list/ListItem';
+import Row from './components/table/Row';
 import Marker from './components/marker/Marker';
 import './index.css';
 import './App.css';
 import * as constants from './constants/constants.js';
-import { listUsers, updateUser, disableUser, enableUser } from './functions/aws-user.js';
-import { addLocation, updateLocation, listLocations } from './functions/aws-location.js';
+import { listUsers, updateUser, disableUser, enableUser } from './api/User.js';
+import { addLocation, updateLocation, listLocations } from './api/Location.js';
 import { AmplifyAuthenticator, AmplifySignUp, AmplifySignIn, AmplifySignOut } from '@aws-amplify/ui-react';
+import Table from './components/table/Table';
+import Navbar from './components/navbar/Navbar';
 
 toast.configure();
 class App extends Component {
@@ -322,36 +324,6 @@ class App extends Component {
     }
 
     render() {
-        let userList = [];
-        if (this.state.users) {
-            userList = this.state.users.map((elem, i) => {
-                const name = elem.Attributes.filter(data => data.Name === 'name');
-                const lastName = elem.Attributes.filter(data => data.Name === 'family_name');
-                const address = elem.Attributes.filter(data => data.Name === 'address');
-
-                let date = new Date(elem.UserCreateDate);
-                if (!date) {
-                    date = new Date();
-                }
-                date = new Intl.DateTimeFormat('pt-BR').format(date);
-
-                return (
-                    <ListItem
-                        userName={elem.Username}
-                        name={name[0]?.Value + ' ' + lastName[0]?.Value}
-                        address={address[0]?.Value}
-                        date={date}
-                        key={i}
-                        enabled={elem.Enabled}
-                        isOwner={this.isOwner()}
-                        onUndo={this.onUndoDeleteListItem}
-                        onChange={this.onChangeListItem}
-                        onDelete={this.onDeleteListItem}
-                        onCardClick={this.onCardClick}
-                    />
-                );
-            });
-        }
         let locationMarkers = Object.keys(this.state.locations).map((key, id) => {
             const curr = this.state.locations[key];
             if (typeof curr.user === "undefined") {
@@ -380,43 +352,26 @@ class App extends Component {
                 <AmplifySignIn slot="sign-in" />
                 <div className="App" >
                     <div className="App-body">
-                        <nav className="navbar navbar-light bg-light">
-                            <span className="navbar-brand mb-0 h1">LawnGuru Code Challenge</span>
-                            <AmplifySignOut />
-                        </nav>
-                        <div className="container">
-                            <div className="row">
-                                <div className="col">
-                                    <div className="table-wrapper">
-                                        <table className="table-responsive card-list-table">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">Name</th>
-                                                    <th scope="col">Address</th>
-                                                    <th scope="col">Date Creation</th>
-                                                    <th scope="col"></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {userList}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div className="row pt-3">
-                                        <div className="col">
-                                            <div className="card">
-                                                <GoogleMap
-                                                    bootstrapURLKeys={{ key: constants.bootstrapURLKeys }}
-                                                    center={this.state.center}
-                                                    zoom={14}
-                                                    style={{ width: '100%', height: '50vh' }}
-                                                >
-                                                    {locationMarkers}
-                                                </GoogleMap>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
+                        <Navbar />
+                        <Table
+                            userList={this.state.users}
+                            isOwner={this.isOwner()}
+                            onClick={this.onCardClick}
+                            onUndoDelete={this.onUndoDeleteListItem}
+                            onChange={this.onChangeListItem}
+                            onDelete={this.onDeleteListItem}
+                        />
+                        <div className="row pt-3">
+                            <div className="col">
+                                <div className="card">
+                                    <GoogleMap
+                                        bootstrapURLKeys={{ key: constants.bootstrapURLKeys }}
+                                        center={this.state.center}
+                                        zoom={14}
+                                        style={{ width: '100%', height: '50vh' }}
+                                    >
+                                        {locationMarkers}
+                                    </GoogleMap>
                                 </div>
                             </div>
                         </div>

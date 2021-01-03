@@ -57,7 +57,6 @@ export const updateLocation = `mutation updateLocation($id: ID! $user: String! $
 
 export const signUpConfig = {
     header: 'Register',
-    hideAllDefaults: true,
     signUpFields: [
         {
             type: "username",

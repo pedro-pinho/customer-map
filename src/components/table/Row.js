@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function ListItem({ onChange, onDelete, onUndo, onCardClick, userName, name, address, date, isOwner, enabled }) {
+function Row({ onChange, onDelete, onUndo, onClick, userName, name, address, date, isOwner, enabled }) {
     const [editName, setEditName] = useState(0);
     const [editAddress, setEditAddress] = useState(0);
 
@@ -61,7 +61,7 @@ function ListItem({ onChange, onDelete, onUndo, onCardClick, userName, name, add
     }
 
     const handleClick = async () => {
-        onCardClick(userName);
+        onClick(userName);
     }
 
     const handleNameOnBlur = () => {
@@ -120,4 +120,4 @@ function ListItem({ onChange, onDelete, onUndo, onCardClick, userName, name, add
     );
 }
 
-export default ListItem;
+export default Row;
